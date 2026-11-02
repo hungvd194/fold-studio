@@ -29,3 +29,15 @@ test('mode switch does not mutate design geometry',()=>{
   assert(!js.includes('G.fitDesign'));
   assert(js.includes('aria-pressed'));
 });
+
+test('beginner guidance and mobile navigation are wired',()=>{
+  assert(html.includes('id="easyHint"'));
+  assert(js.includes('hintText'));
+  assert(js.includes('matchMedia'));
+  assert(js.includes("getElementById('tab-size')"));
+});
+test('advanced controls remain accessible after switching modes',()=>{
+  assert(js.includes("setMode('advanced')"));
+  assert(js.includes("setMode('easy')"));
+  assert(css.includes('.mode-easy #tab-geometry'));
+});
