@@ -14,5 +14,6 @@ jobs:
           node-version: '22'
       - run: node --check dist/app.js
       - run: node --check dist/workspace.js
+      - run: node --check dist/easy-mode.js
       - run: npm test
       # Export verifier requires three user-generated files; run it during export acceptance.
