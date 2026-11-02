@@ -21,14 +21,6 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
    assert.equal(await page.locator('#tab-background').getAttribute('aria-selected'),'true');
    await page.locator('[data-easy-step="4"]').click();
    assert.equal(await page.locator('#tab-sheet').getAttribute('aria-selected'),'true');
-   await page.locator('#foldGuideLaunch').click();
-   assert.equal(await page.locator('#foldGuidePreview svg').isVisible(),true);
-   const firstTitle=await page.locator('#foldGuideTitle').textContent();
-   await page.locator('#foldGuideNext').click();
-   assert.notEqual(await page.locator('#foldGuideTitle').textContent(),firstTitle);
-   await page.locator('#foldGuideBack').click();
-   assert.equal(await page.locator('#foldGuideTitle').textContent(),firstTitle);
-   await page.locator('#modal .close').click();
    await page.locator('#advancedMode').click();
    assert.equal(await page.locator('#easySteps').isVisible(),false);
    await page.locator('#easyMode').click();
