@@ -21,6 +21,11 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
    assert.equal(await page.locator('#tab-background').getAttribute('aria-selected'),'true');
    await page.locator('[data-easy-step="4"]').click();
    assert.equal(await page.locator('#tab-sheet').getAttribute('aria-selected'),'true');
+   await page.locator('#tab-arrange').click();
+   assert.equal(await page.locator('#tab-arrange').getAttribute('aria-selected'),'true');
+   assert.equal(await page.locator('#layoutRotate').isVisible(),true);
+   await page.locator('#layoutRotate').click();
+   assert.equal(await page.locator('#layoutAngle').inputValue(),'90');
    await page.locator('#advancedMode').click();
    assert.equal(await page.locator('#easySteps').isVisible(),false);
    await page.locator('#easyMode').click();

@@ -52,7 +52,7 @@
 @media screen {
  .easy-hint{grid-area:preview;margin:0 12px 8px;padding:9px 11px;border-radius:8px;background:#f3f5ef;color:#4e5f47;font-size:12px;line-height:1.4}
  .easy-hint[hidden]{display:none}
- .mode-easy #tab-geometry,.mode-easy #tab-arrange,.mode-easy #tab-more{display:none}
+ .mode-easy #tab-geometry,.mode-easy #tab-more{display:none}
  .mode-easy #tab-size,.mode-easy #tab-background,.mode-easy #tab-sheet{font-weight:600}
 }
 
@@ -63,3 +63,6 @@
  .easy-guide #easyNext{flex:0 0 auto;background:#465d36;color:#fff;border-radius:7px;padding:8px;font-size:11px}
  .easy-guide #easyNext[hidden]{display:none}
 }
+
+/* Rotation is a core paper-layout action, not an advanced-only feature. */
+.mode-easy #tab-arrange{display:inline-flex}
