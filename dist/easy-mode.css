@@ -55,3 +55,11 @@
  .mode-easy #tab-geometry,.mode-easy #tab-arrange,.mode-easy #tab-more{display:none}
  .mode-easy #tab-size,.mode-easy #tab-background,.mode-easy #tab-sheet{font-weight:600}
 }
+
+@media screen {
+ .easy-guide{grid-area:preview;display:flex;align-items:center;gap:8px;margin:0 0 6px;min-width:0}
+ .easy-guide[hidden]{display:none}
+ .easy-guide .easy-hint{grid-area:auto;flex:1;min-width:0;margin:0;padding:6px 8px;font-size:11px}
+ .easy-guide #easyNext{flex:0 0 auto;background:#465d36;color:#fff;border-radius:7px;padding:8px;font-size:11px}
+ .easy-guide #easyNext[hidden]{display:none}
+}
