@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
-      - run: node tests/verify-export.cjs
+      # Export verifier requires three user-generated files; run it during export acceptance.
