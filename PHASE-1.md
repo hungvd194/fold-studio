@@ -14,15 +14,18 @@ Status: IN PROGRESS. Work is isolated on `phase-1-safety-trust`; do not merge wi
 5. Run `npm test` and `node tests/verify-export.cjs` with real exported SVG/DXF/JSON.
 6. Test desktop, tablet, mobile; check all warning states and inaccessible controls.
 
-## Additional implementation (not yet tested)
+## Additional implementation (CI checks running)
 - User-invoked fit-to-paper now confirms the old and new physical dimensions before applying.
-- Debounced local draft snapshot and opt-in recovery on reload.
+- Debounced local draft snapshot and opt-in recovery on reload; saved designs are excluded from draft prompts.
+- Sheet overflow panel with one-click Auto paper option, preserving physical dimensions.
+- Browser-only storage disclosure and portable backup/restore labels.
+- GitHub Actions workflow runs the Node test suite on branch updates; safety regression tests included.
 
 ## Remaining Phase 1 work
 - Explicit consent added before user-invoked Fit-to-paper scaling. Dedicated sheet-overflow resolution choices remain pending.
-- Draft recovery snapshot and restore prompt implemented (browser-local, debounced). Verify image assets and storage quota failures; clear browser-local storage indicator remains pending.
+- Verify image assets, quota failures, and cross-device backup restoration. Browser-local storage disclosure is implemented.
 - Backup/restore UI and recovery tests (including storage quota failures).
-- Automated tests for no-silent-resize and print/export blocking.
+- Safety regression tests added for no-silent-resize and explicit scaling confirmation; browser export/print blocking remains to be tested.
 - Manual browser smoke tests and CI status before merge.
 
 ## Safety policy
