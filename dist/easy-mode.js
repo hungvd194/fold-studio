@@ -6,7 +6,7 @@
   const easy=document.getElementById('easyMode');
   const advanced=document.getElementById('advancedMode');
   const key='fold-editor-mode-v1';
-  const targets={1:'.library',2:'.settings #fields',3:'#artTool',4:'.export'};
+  const targets={1:'.library',2:'#panel-size',3:'#panel-background',4:'.export'};
   let mode='easy',step=1;
   try{mode=localStorage.getItem(key)==='advanced'?'advanced':'easy'}catch{}
   function render(){
@@ -29,12 +29,12 @@
     step=Number(button.dataset.easyStep);
     render();
     if(step===3){
-      const artwork=document.getElementById('artTool');
+      const artwork=document.getElementById('tab-background');
       if(artwork)artwork.click();
     }
     if(step===4){
-      const paper=document.getElementById('pageSetup');
-      if(paper)paper.open=true;
+      const paper=document.getElementById('tab-sheet');
+      if(paper)paper.click();
     }
     const target=document.querySelector(targets[step]);
     if(!target)return;
@@ -42,6 +42,8 @@
     if(scrollParent && scrollParent!==target)scrollParent.scrollTop=Math.max(0,target.offsetTop-scrollParent.offsetTop-16);
     else if(step===1)target.scrollTop=0;
     if(step===2){
+      const sizeTab=document.getElementById('tab-size');
+      if(sizeTab)sizeTab.click();
       const field=target.querySelector('input');
       if(field)field.focus({preventScroll:true});
     }
