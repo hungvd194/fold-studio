@@ -142,6 +142,7 @@ $('#instructions').onclick=()=>{
   $('#foldGuideNext').onclick=()=>{if(stage<steps.length-1){stage++;update()}};
   update();
 };
+$('#foldGuideLaunch').onclick=()=>$('#instructions').click();
 $('#guide').onclick=()=>openModal('<h2 class="modal-title">Make every fold your own.</h2><ol class="instruction"><li>Enter width, height, and depth where applicable. Dimensions support 1–5,000 mm and decimal input.</li><li>Use aspect lock, swap width/height, or scale the whole dieline.</li><li>Use Flaps → Outline to change flap shapes, or Flap sizes for lengths, chamfers, curves, and tag holes.</li><li>Content clearance adds space to both sides of the body. The actual panel size is shown in the summary.</li><li>Choose paper and margins in Paper. Auto-fit shrinks oversized designs and shows the resulting dimensions. Export in the header offers actual-size SVG, DXF and PDF printing.</li><li>Save a named custom size or export/import editable JSON settings. Everything stays local.</li></ol><p class="muted">Thickness is recorded, not compensated. Folded preview is illustrative. Test a prototype before production.</p>');
 function sheetItems(){return p.layout?.enabled?p.layout.items:[{id:'single',x:p.margin,y:p.margin,rotation:fit.rotate?90:0}]}
 function sheetMarkup(){return `<defs><g id="export-master">${artworkDieline(geometry,true)}</g></defs>${sheetItems().map(item=>`<g data-sheet-copy="${item.id}" transform="${FoldLayout.transform(item,geometry)}"><use href="#export-master"/></g>`).join('')}`}
