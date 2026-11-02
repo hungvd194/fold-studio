@@ -72,7 +72,12 @@
   const viewMenu=document.createElement('details');viewMenu.className='view-menu';viewMenu.innerHTML=`<summary>${FoldIcons.svg('view')} View</summary>`;viewMenu.append(options);
   const dimensionControl=$('#showDimensions').closest('label');options.append(dimensionControl);
   $('.paper-tools').append(viewMenu);tools.append(fitLine);
-  $('#layoutTool').classList.add('arrange-button');$('#layoutActions').prepend($('#layoutTool'));$('.sheet-layout-tools').append($('#layoutActions'));
+  const arrangeEntry=document.createElement('div');arrangeEntry.className='arrange-entry';
+  arrangeEntry.innerHTML='<span id="arrangeHint" class="arrange-hint">Copy, rotate &amp; fill sheet</span><span id="arrangeTooltip" role="tooltip">Arrange multiple copies on one sheet: duplicate, rotate, drag into position, or fill the printable area automatically.</span>';
+  $('#layoutTool').classList.add('arrange-button');$('#layoutTool').setAttribute('aria-describedby','arrangeHint arrangeTooltip');arrangeEntry.prepend($('#layoutTool'));
+  $('.sheet-layout-tools').append(arrangeEntry,$('#layoutActions'));
+  const updateArrangeHelp=()=>{const active=$('#layoutTool').getAttribute('aria-pressed')==='true';arrangeEntry.classList.toggle('is-active',active);$('#arrangeTooltip').textContent=active?'Return to editing the shape and artwork. Your copy positions and rotations are kept.':'Arrange multiple copies on one sheet: duplicate, rotate, drag into position, or fill the printable area automatically.';};
+  new MutationObserver(updateArrangeHelp).observe($('#layoutTool'),{attributes:true,attributeFilter:['aria-pressed']});updateArrangeHelp();
   ['layoutDuplicate','layoutRotate','layoutFill'].forEach(id=>$('#'+id).addEventListener('click',()=>{if(LayoutUI.active()){show('sheet');selectSheet(1);}}));
   $('#fitA4').tabIndex=-1;
   viewMenu.addEventListener('toggle',()=>{if(viewMenu.open)exportMenu.open=false;});
