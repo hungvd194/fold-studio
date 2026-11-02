@@ -1,7 +1,7 @@
 name: Fold Studio tests
 on:
   push:
-    branches: [main, phase-1-safety-trust, phase-2-easy-mode, phase-3-visual-guidance]
+    branches: [main, phase-1-safety-trust, phase-2-easy-mode, phase-3-visual-guidance, remove-fold-preview]
   pull_request:
   workflow_dispatch:
 jobs:
@@ -15,7 +15,6 @@ jobs:
       - run: node --check dist/app.js
       - run: node --check dist/workspace.js
       - run: node --check dist/easy-mode.js
-      - run: node --check dist/visual-guide.js
       - run: npm test
       - run: npm install --no-save playwright@1.56.1
       - run: npx playwright install --with-deps chromium
