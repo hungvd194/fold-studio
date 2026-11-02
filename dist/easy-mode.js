@@ -17,7 +17,9 @@
     easy.setAttribute('aria-pressed',String(mode==='easy'));
     advanced.setAttribute('aria-pressed',String(mode==='advanced'));
     document.getElementById('easySteps').hidden=mode!=='easy';
-    if(hint){hint.hidden=mode!=='easy';hint.textContent=hintText[step];}
+    if(hint){hint.textContent=hintText[step];}
+    if(guide)guide.hidden=mode!=='easy';
+    if(next){next.hidden=step===4;next.textContent=step===3?'Continue to print →':'Next →';}
     steps.forEach(button=>{
       const active=Number(button.dataset.easyStep)===step;
       button.classList.toggle('active',active);
@@ -60,5 +62,6 @@
       if(exportButton)exportButton.focus({preventScroll:true});
     }
   }));
+  if(next)next.addEventListener('click',()=>{const button=steps.find(item=>Number(item.dataset.easyStep)===step+1);if(button)button.click()});
   render();
 })();
