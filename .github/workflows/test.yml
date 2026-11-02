@@ -16,4 +16,7 @@ jobs:
       - run: node --check dist/workspace.js
       - run: node --check dist/easy-mode.js
       - run: npm test
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/browser-smoke.cjs
       # Export verifier requires three user-generated files; run it during export acceptance.
