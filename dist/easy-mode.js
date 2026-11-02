@@ -32,7 +32,7 @@
     step=Number(button.dataset.easyStep);
     render();
     if(window.matchMedia('(max-width: 800px)').matches){
-      const view=step===1?'library':step===4?'settings':step===2?'settings':'canvas';
+      const view=step===1?'library':step===4?'settings':step===2?'settings':'settings';
       const mobile=document.querySelector('.workspace-switch [data-view="'+view+'"]');
       if(mobile)mobile.click();
     }
