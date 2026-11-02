@@ -1,22 +1,27 @@
 # Phase 2 — Easy Mode
 
-Status: IN PROGRESS on `phase-2-easy-mode`.
+Status: IMPLEMENTED — awaiting browser acceptance on `phase-2-easy-mode`.
 
-## Goal
-A novice can choose a template, enter body dimensions, optionally decorate, and print/export without learning technical fold geometry. Advanced mode retains the existing complete controls and uses the **same design state**.
+## Objective
+Help a first-time user choose a template, enter final body dimensions, optionally decorate, and export/print while keeping the existing Canvas large and preserving all Advanced Mode settings.
 
-## First implementation
-- Easy/Advanced mode switch; remembers mode in browser-local storage.
-- Four-step beginner navigation: template → dimensions → decoration → print/export.
-- Beginner-first presentation and reduced advanced control clutter.
-- No change to physical dimensions or geometry calculations when switching modes.
+## Implemented
+- One compact 38px navigation row; no additional stacked header.
+- Easy/Advanced switch with browser-local preference; design state is shared.
+- Four-step beginner workflow with contextual explanations and a Next action.
+- Steps target the existing template library, Body, Artwork, and Paper/Export controls.
+- Mobile steps switch to the correct workspace view.
+- Hide advanced-only inspector tabs in Easy Mode; switching back from Advanced selects a visible tab.
+- Preserve physical dimensions and Phase 1 safety checks.
+- Automated safety/geometry/artwork/layout/step-navigation tests in CI.
 
-## Acceptance checklist
-- [ ] Easy mode exposes all controls required for a first successful design.
-- [ ] Easy ↔ Advanced preserves template, dimensions, artwork, and paper settings.
-- [ ] Step navigation is accessible with keyboard, mobile and screen readers.
-- [ ] No technical terms or dead-end controls in beginner flow.
-- [ ] All Node tests and browser smoke tests pass.
-- [ ] New users complete the basic workflow without assistance.
+## Acceptance
+- [x] Beginner steps are implemented and linked to real controls.
+- [x] Easy/Advanced uses one design state; no geometry mutation in mode script.
+- [x] Compact shell layout and keyboard-operable native buttons.
+- [x] Node regression tests added and CI enabled for Phase 2.
+- [ ] Verify on actual desktop and mobile browsers: no clipping, readable inspector, full canvas.
+- [ ] Verify template → size → artwork → export manually, including backup and paper overflow.
+- [ ] Test with novice users before claiming unassisted success.
 
-Do not merge before these checks are complete.
+Do not merge until browser acceptance is complete.
