@@ -5,6 +5,6 @@
   "description": "A visual dieline editor for custom packaging, envelopes, and print-ready layouts.",
   "scripts": {
     "start": "node serve.cjs",
-    "test": "node --test tests/geometry.test.cjs tests/canvas.test.cjs tests/artwork.test.cjs tests/layout.test.cjs tests/canvas-ui.test.cjs"
+    "test": "node --test tests/geometry.test.cjs tests/canvas.test.cjs tests/artwork.test.cjs tests/layout.test.cjs tests/canvas-ui.test.cjs tests/safety.test.cjs"
   }
 }
