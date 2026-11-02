@@ -12,7 +12,7 @@ Import this GitHub repository in Vercel. The included `vercel.json` serves `dist
 
 ## Workspace
 
-The editor fits the browser viewport. Desktop keeps the template library, live canvas, and inspector side by side. Body, Flaps, Artwork, Paper, and More tabs group the settings. Export in the shared header provides SVG, DXF, and Print / Save PDF from every view. Long settings scroll inside the inspector without moving the canvas. Tablet shows the canvas and inspector side by side, with Templates as a separate view. Phone screens switch between Templates, Canvas, and Settings; a live miniature preview stays visible above the phone inspector. View groups the grid, snapping, handles, and dimension overlays. Main controls use 12–14 px text with darker secondary labels and SVG icons.
+The editor fits the browser viewport. The 3D preview and mode-switch bar have been removed to enlarge the canvas; Undo, Redo and Fit view sit beside the design title. Arrange tools live in their own inspector tab. Desktop keeps the template library, live canvas, and inspector side by side. Body, Flaps, Artwork, Paper, Arrange, and More tabs group the settings. Export in the shared header provides SVG, DXF, and Print / Save PDF from every view. Long settings scroll inside the inspector without moving the canvas. Tablet shows the canvas and inspector side by side, with Templates as a separate view. Phone screens switch between Templates, Canvas, and Settings; a live miniature preview stays visible above the phone inspector. View groups the grid, snapping, handles, and dimension overlays. Main controls use 12–14 px text with darker secondary labels and SVG icons.
 
 ## Custom flap shapes
 
@@ -22,7 +22,7 @@ Open **Flaps** to choose **Trapezoid** or **Rectangle** independently for the to
 
 ### Multiple copies on one A4 sheet
 
-Choose **Arrange** above the canvas to place multiple copies of the current design on a fixed paper size. Auto paper switches to A4 on entering this mode. **Arrange** shows a persistent “Copy, rotate & fill sheet” hint, with a detailed tooltip on hover or keyboard focus. Open it to reveal **Duplicate**, **Rotate 90°**, **Remove**, and **Fill sheet**. The visible hint also explains the mode on touch screens. **Duplicate** adds the selected copy in a free position; **90°** rotates the selection; the **Copies on sheet** panel also accepts arbitrary rotation angles and precise X/Y positions. Drag a copy or use arrow keys to move it (Shift = 10 mm, Alt = 0.1 mm). Ctrl+D duplicates, R rotates, and Delete removes a copy. Each completed operation can be undone.
+Open the **Arrange** tab in the right inspector to place multiple copies of the current design on a fixed paper size. Auto paper switches to A4 on entering this mode. The **Arrange** tab explains its tools and exposes **Duplicate**, **Rotate 90°**, **Remove**, and **Fill sheet**, plus copy selection, position, angle, gap and reset. Selecting Body, Flaps or Artwork returns to design editing; returning to Arrange preserves the stored sheet arrangement. **Duplicate** adds the selected copy in a free position; **90°** rotates the selection; the **Copies on sheet** panel also accepts arbitrary rotation angles and precise X/Y positions. Drag a copy or use arrow keys to move it (Shift = 10 mm, Alt = 0.1 mm). Ctrl+D duplicates, R rotates, and Delete removes a copy. Each completed operation can be undone.
 
 **Fill sheet** fills the printable area with a grid at the existing physical dimensions, using the configured gap and optional 90° rotation. It compares row orientations, including mixed row bands, and caps output at 200 copies. It is a conservative bounding-box layout, not irregular-shape nesting. For example, ten 55 × 90 mm gift tags fit on portrait A4 with 5 mm margins and 3 mm gaps when rotated.
 
@@ -63,7 +63,7 @@ Open **Background image**, or click **Image tool** above the canvas. Upload or d
 - In Image tool mode, drag to reposition and scroll over a part to scale its image around the pointer. Ctrl+scroll zooms the canvas instead. Arrow keys nudge a selected part's image. Turn Image tool off to use the geometry resize handles again.
 - **Use whole-dieline image for every component** assigns the same source with an independent fit in each part. **Remove image** unassigns the current target; undo can restore it. Resetting body dimensions retains artwork.
 
-Saved designs and size presets keep image references locally. JSON exports embed all referenced images, including the inactive mode, so the backup is portable. Import accepts older settings without images. SVG embeds each used source once and clips its instances to the correct components; Print / Save as PDF includes artwork. DXF remains a cut/crease geometry export and does not embed raster images. The illustrative folded preview does not show artwork.
+Saved designs and size presets keep image references locally. JSON exports embed all referenced images, including the inactive mode, so the backup is portable. Import accepts older settings without images. SVG embeds each used source once and clips its instances to the correct components; Print / Save as PDF includes artwork. DXF remains a cut/crease geometry export and does not embed raster images. The editor uses a 2D dieline view; the phone inspector includes a live miniature of that same drawing.
 
 If browser storage is unavailable or full, the app reports it and keeps the image for the current session; export a JSON backup before leaving.
 
@@ -75,7 +75,7 @@ Choose Auto, A4, A3, Letter, or a custom sheet with margins. Fit checks account 
 
 SVG uses physical `mm` width/height and millimeter coordinates. DXF declares millimeter units and uses CUT/CREASE layers. Both apply the selected sheet margins and rotation. Print / Save as PDF uses the browser print dialog: use **100% / actual size**, no browser-added margins, and a matching paper size. Printers and browser dialogs can override the CSS paper request; check a measured edge first.
 
-These are starter dielines for paper prototypes, not certified manufacturing files. Stock thickness is recorded but does not automatically compensate the geometry. Folded previews are illustrative. Test fit and assembly with the actual material before production.
+These are starter dielines for paper prototypes, not certified manufacturing files. Stock thickness is recorded but does not automatically compensate the geometry. The 3D preview has been removed. Test fit and assembly with the actual material before production.
 
 The UI requests DM Sans from Google Fonts and falls back to sans-serif without a connection. The editor, saved designs and exports run locally.
 

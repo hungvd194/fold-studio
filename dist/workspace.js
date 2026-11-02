@@ -4,14 +4,14 @@
   const scroll = $('.settings-scroll');
   const tabs = document.createElement('div');
   tabs.className = 'inspector-tabs'; tabs.setAttribute('role','tablist'); tabs.setAttribute('aria-label','Design settings');
-  const groups = [['size','Body'],['geometry','Flaps'],['background','Artwork'],['sheet','Paper'],['more','More']];
+  const groups = [['size','Body'],['geometry','Flaps'],['background','Artwork'],['sheet','Paper'],['arrange','Arrange'],['more','More']];
   const panels = Object.fromEntries(groups.map(([id,label]) => {
     const panel = document.createElement('section'); panel.id = `panel-${id}`; panel.className = 'inspector-panel'; panel.setAttribute('role','tabpanel'); panel.setAttribute('aria-labelledby',`tab-${id}`);
     const button = document.createElement('button'); button.id=`tab-${id}`; button.textContent=label; button.setAttribute('role','tab'); button.setAttribute('aria-controls',panel.id); button.onclick=()=>show(id); tabs.append(button);
     return [id,panel];
   }));
   [...scroll.children].forEach(node => {
-    const group = node.id==='foldGeometry'?'geometry':node.id==='artworkPanel'?'background': ['sheetLayoutPanel','pageSetup'].includes(node.id)?'sheet':node.tagName==='DETAILS'&&node.id!=='foldGeometry'?'more':'size';
+    const group = node.id==='foldGeometry'?'geometry':node.id==='artworkPanel'?'background':node.id==='sheetLayoutPanel'?'arrange':node.id==='pageSetup'?'sheet':node.tagName==='DETAILS'?'more':'size';
     panels[group].append(node);
   });
   scroll.append(...Object.values(panels)); scroll.before(tabs);
@@ -19,15 +19,16 @@
     groups.forEach(([key])=>{ const selected=key===id; panels[key].hidden=!selected; const button=$(`#tab-${key}`);button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1; });
     scroll.scrollTop=0;
     document.querySelectorAll('.view-menu').forEach(menu=>menu.open=false);
+    if(id==='arrange')LayoutUI.setActive(true);
+    else if(['size','geometry','background'].includes(id))LayoutUI.setActive(false);
     if(id==='background'&&!LayoutUI.active())ArtworkUI.setEditing(true);
     else if(ArtworkUI.editing())ArtworkUI.setEditing(false);
   }
   tabs.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=groups.findIndex(([id])=>`tab-${id}`===document.activeElement.id);const next=event.key==='Home'?0:event.key==='End'?groups.length-1:(index+(event.key==='ArrowRight'?1:groups.length-1))%groups.length;show(groups[next][0]);$(`#tab-${groups[next][0]}`).focus();});
   $('#artTool').addEventListener('click',()=>show('background'));
-  $('#layoutTool').addEventListener('click',()=>show('sheet'));
+  $('#layoutTool').addEventListener('click',()=>show(LayoutUI.active()?'arrange':'size'));
   Object.values(panels).forEach(panel=>panel.querySelectorAll('details').forEach(detail=>{detail.open=true;}));
   panels.more.querySelectorAll('details').forEach(detail=>{const heading=document.createElement('h3');heading.textContent=detail.querySelector('summary').textContent.trim();detail.querySelector('summary').after(heading);});
-  const sheetIntro=document.createElement('p');sheetIntro.className='inspector-intro';sheetIntro.textContent='Set your paper, then use Sheet layout to arrange multiple copies.';panels.sheet.prepend(sheetIntro);
   const mobile=document.createElement('div');mobile.className='workspace-switch';mobile.innerHTML='<button data-view="library">Templates</button><button data-view="canvas" class="selected">Canvas</button><button data-view="settings">Settings</button>';
   function setView(view){document.body.dataset.view=view;mobile.querySelectorAll('button').forEach(b=>b.classList.toggle('selected',b.dataset.view===view));updatePreview();}
   $('header').after(mobile);mobile.onclick=event=>{const view=event.target.dataset.view;if(view)setView(view);};document.body.dataset.view='canvas';
@@ -45,9 +46,8 @@
   const geometry=$('#foldGeometry');
   const selectGeometry=subpages(geometry,[['Outline',[$('#flapShapes')]],['Flap sizes',[$('#advancedFields'),geometry.querySelector(':scope > .field-hint')]]]);
   const shapeAvailability=()=>{const unavailable=$('#flapShapes').hidden;geometry.querySelector('.inspector-subtabs button').disabled=unavailable;if(unavailable)selectGeometry(1);};new MutationObserver(shapeAvailability).observe($('#flapShapes'),{attributes:true,attributeFilter:['hidden']});shapeAvailability();
-  const selectSheet=subpages(panels.sheet,[['Paper',[$('#pageSetup'),$('#layoutOne')]],['Copies',[$('#sheetLayoutPanel')]]]);
-  const updateReset=()=>{$('#layoutOne').hidden=$('#sheetLayoutPanel').hidden;};new MutationObserver(updateReset).observe($('#sheetLayoutPanel'),{attributes:true,attributeFilter:['hidden']});updateReset();
-  $('#layoutTool').addEventListener('click',()=>selectSheet($('#layoutTool').getAttribute('aria-pressed')==='true'?1:0));
+  panels.arrange.append($('#layoutOne'));
+  const updateReset=()=>{const hidden=$('#sheetLayoutPanel').hidden;$('#layoutOne').hidden=hidden;if(hidden&&$('#tab-arrange').getAttribute('aria-selected')==='true')show('size');else if(!hidden&&['size','geometry','background'].some(id=>$('#tab-'+id).getAttribute('aria-selected')==='true'))show('arrange');};new MutationObserver(updateReset).observe($('#sheetLayoutPanel'),{attributes:true,attributeFilter:['hidden']});updateReset();
   const art=$('#artworkPanel'),controls=$('#artControls'),artNodes=[...art.children].filter(node=>node.tagName!=='SUMMARY'&&node!==controls);
   const emptyTransform=document.createElement('p');emptyTransform.className='field-hint';emptyTransform.textContent='Choose an image or solid color in Fill to adjust its appearance.';
   subpages(art,[['Fill',artNodes],['Transform',[emptyTransform,controls]]]);
@@ -72,13 +72,11 @@
   const viewMenu=document.createElement('details');viewMenu.className='view-menu';viewMenu.innerHTML=`<summary>${FoldIcons.svg('view')} View</summary>`;viewMenu.append(options);
   const dimensionControl=$('#showDimensions').closest('label');options.append(dimensionControl);
   $('.paper-tools').append(viewMenu);tools.append(fitLine);
-  const arrangeEntry=document.createElement('div');arrangeEntry.className='arrange-entry';
-  arrangeEntry.innerHTML='<span id="arrangeHint" class="arrange-hint">Copy, rotate &amp; fill sheet</span><span id="arrangeTooltip" role="tooltip">Arrange multiple copies on one sheet: duplicate, rotate, drag into position, or fill the printable area automatically.</span>';
-  $('#layoutTool').classList.add('arrange-button');$('#layoutTool').setAttribute('aria-describedby','arrangeHint arrangeTooltip');arrangeEntry.prepend($('#layoutTool'));
-  $('.sheet-layout-tools').append(arrangeEntry,$('#layoutActions'));
-  const updateArrangeHelp=()=>{const active=$('#layoutTool').getAttribute('aria-pressed')==='true';arrangeEntry.classList.toggle('is-active',active);$('#arrangeTooltip').textContent=active?'Return to editing the shape and artwork. Your copy positions and rotations are kept.':'Arrange multiple copies on one sheet: duplicate, rotate, drag into position, or fill the printable area automatically.';};
-  new MutationObserver(updateArrangeHelp).observe($('#layoutTool'),{attributes:true,attributeFilter:['aria-pressed']});updateArrangeHelp();
-  ['layoutDuplicate','layoutRotate','layoutFill'].forEach(id=>$('#'+id).addEventListener('click',()=>{if(LayoutUI.active()){show('sheet');selectSheet(1);}}));
+  const arrangeHelp=document.createElement('p');arrangeHelp.id='arrangeHelp';arrangeHelp.className='field-hint';arrangeHelp.textContent='Duplicate, rotate and position copies.';
+  panels.arrange.prepend(arrangeHelp,$('#layoutActions'));panels.arrange.append($('#layoutTool'));
+  $('#layoutTool').hidden=true;$('#layoutTool').classList.add('arrange-button');$('#tab-arrange').title='Duplicate, rotate, position copies and fill the sheet';$('#tab-arrange').setAttribute('aria-describedby','arrangeHelp');
+  $('.sheet-layout-tools').remove();
+  $('.title-row').insertBefore($('.canvas-actions'),$('#save'));$('.canvas-bar').remove();
   $('#fitA4').tabIndex=-1;
   viewMenu.addEventListener('toggle',()=>{if(viewMenu.open)exportMenu.open=false;});
   document.addEventListener('pointerdown',event=>{if(!viewMenu.contains(event.target))viewMenu.open=false;});
@@ -106,8 +104,8 @@
   new MutationObserver(updatePreview).observe($('#bodySize'),{childList:true});updatePreview();
   matchMedia('(max-width:700px)').addEventListener('change',updatePreview);
 
-  const icons={save:'save',undo:'undo',redo:'redo',fit:'fit',fitPaper:'fit',closeDirect:'close',download:'download',print:'print',flat:'flat',folded:'box'};
-  for(const [id,name]of Object.entries(icons)){const button=$('#'+id);if(!button)continue;const label={fit:'Fit view',download:'Download dieline',print:'Print / Save PDF',flat:'Dieline',folded:'Preview'}[id];button.innerHTML=FoldIcons.svg(name)+(label?`<span>${label}</span>`:'');if(label)button.setAttribute('aria-label',label);}
+  const icons={save:'save',undo:'undo',redo:'redo',fit:'fit',fitPaper:'fit',closeDirect:'close',download:'download',print:'print'};
+  for(const [id,name]of Object.entries(icons)){const button=$('#'+id);if(!button)continue;const label={fit:'Fit view',download:'Download dieline',print:'Print / Save PDF'}[id];button.innerHTML=FoldIcons.svg(name)+(label?`<span>${label}</span>`:'');if(label)button.setAttribute('aria-label',label);}
   $('#directEditor button[type=submit]').innerHTML=FoldIcons.svg('check');
   updateFitFeedback();
   show('size');
