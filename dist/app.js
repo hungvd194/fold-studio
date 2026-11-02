@@ -5,6 +5,30 @@ const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 let selected=templates[0],p=G.defaults(selected),unit='mm',category='All',zoom=1,geometry,fit,errors=[],timer;
 let history=[],future=[],designs=[],sizePresets=[];
 let fitResult=null;
+// Browser-local recovery snapshot; failures must not prevent editing.
+const DRAFT_KEY='fold-recovery-draft-v1';
+let recoveryReady=false;
+let draftTimer=null;
+function scheduleRecovery(){
+  if(!recoveryReady)return;
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+    try{ArtworkUI.flush();localStorage.setItem(DRAFT_KEY,JSON.stringify({format:'fold-recovery',version:1,savedAt:Date.now(),state:p}));}
+    catch(error){console.warn('Recovery snapshot unavailable',error);}
+  },650);
+}
+function recoverDraft(){
+  let draft;
+  try{draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');}catch{return;}
+  if(!draft||draft.version!==1||!draft.state)return;
+  if(!window.confirm('An unfinished design was found in this browser. Restore it?')){
+    try{localStorage.removeItem(DRAFT_KEY);}catch{}
+    return;
+  }
+  try{applyState(draft.state);toast('Recovered your last working design. Save a copy or export a backup.');}
+  catch(error){toast('Recovery failed: '+error.message);}
+}
+
 const readStorage=(key)=>{try {const a=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(a)?a:[]}catch{return []}};
 designs=readStorage('fold-designs');sizePresets=readStorage('fold-size-presets');
 const display=v=>Number((unit==='mm'?v:v/25.4).toFixed(unit==='mm'?3:5));
@@ -66,6 +90,7 @@ function renderDrawing(){keepDesignOnPaper();document.getElementById("fitA4").te
   CanvasStudio.render(g,p,fit,selected);$('#sheetSize').textContent=`${display(g.bw)} × ${display(g.bh)} ${unit}`;$('#sheetTotal').textContent=`${display(fit.sheetW)} × ${display(fit.sheetH)} ${unit}`;$('#bodySize').textContent=`${display(g.body.w)} × ${display(g.body.h)}${['box','bag','tray'].includes(selected.kind)?' × '+display(g.body.d):''} ${unit}`;$('#paperStatus').textContent=fit.fits?(fit.rotate?'Fits rotated 90° · print at actual size':'Fits at actual size with sheet margins'):'Dieline exceeds the usable sheet area';$('#paperStatus').classList.toggle('warning',!fit.fits);$('#canvasUnit').textContent=unit==='mm'?'millimeters':'inches';document.documentElement.style.setProperty('--paper',colors[p.stock]);updatePrintStyles();
   if(p.layout?.enabled){$('#paperStatus').textContent=fit.fits?`${p.layout.items.length} ${p.layout.items.length===1?'copy':'copies'} · actual size`:`${fit.layout.outside.length} outside · ${fit.layout.pairs.length} overlapping / too close`}
   updateFitFeedback();
+  scheduleRecovery();
 }
 function updatePrintStyles(){if(!geometry)return;let style=$('#printPageStyle');if(!style){style=document.createElement('style');style.id='printPageStyle';document.head.append(style)}style.textContent=`@media print{@page{size:${fit.sheetW}mm ${fit.sheetH}mm;margin:0}body>#printSheet{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}#printSheet>svg{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}}`}
 function setZoom(v){CanvasStudio.setZoom(v)}
@@ -124,7 +149,7 @@ CanvasStudio.init({
   edit:(key,value)=>{const next=FoldCanvasModel.change(selected,p,key,value),invalid=G.validate(selected,next);if(invalid.length){toast(invalid[0].message);return}remember();p=next;renderFields();renderDrawing()},
   paper:value=>{const input=$('#paper');input.value=value;input.dispatchEvent(new Event('change'))},
   orientation:()=>{if(p.paper==='auto')return;remember();[p.paperW,p.paperH]=[p.paperH,p.paperW];renderFields();renderDrawing()},
-  fitPaper:()=>{if(errors.length)return;if(p.paper==='auto'){toast('Auto already fits the dieline. Select A4 to fit to a fixed sheet.');return}const availableW=p.paperW-2*p.margin,availableH=p.paperH-2*p.margin;const factor=Math.min(1,Math.max(Math.min(availableW/geometry.bw,availableH/geometry.bh),Math.min(availableW/geometry.bh,availableH/geometry.bw)));if(factor>=1){toast('The dieline already fits this sheet.');return}const next={...p};for(const [key]of [...G.fields(selected.kind).main,...G.fields(selected.kind).extra])next[key]=G.round(next[key]*factor*.999999);const invalid=G.validate(selected,next);if(invalid.length){toast('Cannot fit at this size: '+invalid[0].message);return}remember();p=next;renderFields();renderDrawing();CanvasStudio.fitView();toast('Dieline scaled to '+Math.floor(factor*100)+'% to fit. Undo restores original dimensions.')}
+  fitPaper:()=>{if(errors.length)return;if(p.paper==='auto'){toast('Auto already fits the dieline. Select A4 to fit to a fixed sheet.');return}const availableW=p.paperW-2*p.margin,availableH=p.paperH-2*p.margin;const factor=Math.min(1,Math.max(Math.min(availableW/geometry.bw,availableH/geometry.bh),Math.min(availableW/geometry.bh,availableH/geometry.bw)));if(factor>=1){toast('The dieline already fits this sheet.');return}const next={...p};for(const [key]of [...G.fields(selected.kind).main,...G.fields(selected.kind).extra])next[key]=G.round(next[key]*factor*.999999);const invalid=G.validate(selected,next);if(invalid.length){toast('Cannot fit at this size: '+invalid[0].message);return}if(!window.confirm(`This will change the actual product dimensions from ${display(p.w)} × ${display(p.h)} ${unit} to ${display(next.w)} × ${display(next.h)} ${unit}. Continue?`))return;remember();p=next;renderFields();renderDrawing();CanvasStudio.fitView();toast('Dieline scaled to '+Math.floor(factor*100)+'% to fit. Undo restores original dimensions.')}
 });
 ArtworkUI.init({state:()=>({...p}),template:()=>selected,geometry:()=>geometry,refresh:renderDrawing,flat:()=>showDieline(),toast,
   change:(state,commit=true)=>{if(commit)remember();p=state;renderDrawing()},
@@ -136,3 +161,5 @@ LayoutUI.init({state:()=>({...p}),geometry:()=>geometry,refresh:renderDrawing,fl
 });
 new ResizeObserver(()=>{if(!errors.length)renderDrawing()}).observe($('#canvas'));
 $('#savedCount').textContent=designs.length;choose(selected.id);
+recoveryReady=true;
+recoverDraft();
