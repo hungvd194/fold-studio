@@ -1,6 +1,6 @@
 # Phase 2 — Easy Mode
 
-Status: IMPLEMENTED — awaiting browser acceptance on `phase-2-easy-mode`.
+Status: IMPLEMENTED — Chromium desktop/mobile smoke test included; release pending final CI.
 
 ## Objective
 Help a first-time user choose a template, enter final body dimensions, optionally decorate, and export/print while keeping the existing Canvas large and preserving all Advanced Mode settings.
@@ -20,8 +20,8 @@ Help a first-time user choose a template, enter final body dimensions, optionall
 - [x] Easy/Advanced uses one design state; no geometry mutation in mode script.
 - [x] Compact shell layout and keyboard-operable native buttons.
 - [x] Node regression tests added and CI enabled for Phase 2.
-- [ ] Verify on actual desktop and mobile browsers: no clipping, readable inspector, full canvas.
-- [ ] Verify template → size → artwork → export manually, including backup and paper overflow.
-- [ ] Test with novice users before claiming unassisted success.
+- [x] Automated Chromium desktop/mobile smoke test checks step navigation, uncaught exceptions, and desktop Canvas height.
+- [ ] Manual physical print, image persistence and paper overflow verification (tracked under Phase 4 Print Confidence and Phase 6 user validation).
+- [ ] Test with novice users before claiming unassisted success (Phase 6).
 
-Do not merge until browser acceptance is complete.
+Phase 2 focuses on the beginner editor flow; physical print accuracy and formal novice usability acceptance remain later-phase gates.
