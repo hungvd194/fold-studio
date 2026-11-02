@@ -1,7 +1,7 @@
 name: Fold Studio tests
 on:
   push:
-    branches: [main, phase-1-safety-trust]
+    branches: [main, phase-1-safety-trust, phase-2-easy-mode]
   pull_request:
   workflow_dispatch:
 jobs:
