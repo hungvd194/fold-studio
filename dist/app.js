@@ -72,7 +72,7 @@ function renderDrawing(){keepDesignOnPaper();document.getElementById("fitA4").te
   if(p.layout?.enabled){$('#paperStatus').textContent=fit.fits?`${p.layout.items.length} ${p.layout.items.length===1?'copy':'copies'} · actual size`:`${fit.layout.outside.length} outside · ${fit.layout.pairs.length} overlapping / too close`}
   updateFitFeedback();
 }
-function updatePrintStyles(){if(!geometry)return;let style=$('#printPageStyle');if(!style){style=document.createElement('style');style.id='printPageStyle';document.head.append(style)}style.textContent=`@media print{@page{size:${fit.sheetW}mm ${fit.sheetH}mm;margin:0}.canvas #drawing{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important;position:absolute!important;left:0!important;top:0!important;transform:none!important;}}`}
+function updatePrintStyles(){if(!geometry)return;let style=$('#printPageStyle');if(!style){style=document.createElement('style');style.id='printPageStyle';document.head.append(style)}style.textContent=`@media print{@page{size:${fit.sheetW}mm ${fit.sheetH}mm;margin:0}body>#printSheet{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}#printSheet>svg{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}}`}
 function setZoom(v){CanvasStudio.setZoom(v)}
 function showDieline(){document.getElementById("drawing").style.display="block"}
 function openModal(html){$('#modalContent').innerHTML=html;$('#modal').showModal()}
@@ -104,7 +104,23 @@ function sheetMarkup(){return `<defs><g id="export-master">${artworkDieline(geom
 function exportSvg(){return `<svg xmlns="http://www.w3.org/2000/svg" width="${fit.sheetW}mm" height="${fit.sheetH}mm" viewBox="0 0 ${fit.sheetW} ${fit.sheetH}"><title>${escapeHtml(selected.name)} — ${G.round(p.w)} × ${G.round(p.h)} mm — ${sheetItems().length} copies</title><desc>Cut: orange. Crease: dashed green. True-size millimeters. Stock thickness recorded, not compensated. Prototype before production.</desc><metadata>${escapeHtml(JSON.stringify({format:'fold-design',version:1,state:p}))}</metadata>${sheetMarkup()}</svg>`}
 function exportDxf(){const g=geometry,out=['0','SECTION','2','HEADER','9','$INSUNITS','70','4','0','ENDSEC','0','SECTION','2','ENTITIES'];for(const item of sheetItems()){const pt=a=>FoldLayout.point(item,g,a),line=(a,b,layer)=>{if(a[0]===b[0]&&a[1]===b[1])return;const A=pt(a),B=pt(b);out.push('0','LINE','8',layer,'10',String(A[0]),'20',String(G.round(fit.sheetH-A[1])),'30','0','11',String(B[0]),'21',String(G.round(fit.sheetH-B[1])),'31','0')};g.cut.forEach((a,i)=>line(a,g.cut[(i+1)%g.cut.length],'CUT'));g.fold.forEach(points=>points.slice(1).forEach((b,i)=>line(points[i],b,'CREASE')));g.circles.forEach(c=>{const a=pt([c.x,c.y]);out.push('0','CIRCLE','8','CUT','10',String(a[0]),'20',String(G.round(fit.sheetH-a[1])),'30','0','40',String(c.r))})}out.push('0','ENDSEC','0','EOF');return out.join('\n')}
 $('#download').onclick=()=>{if(errors.length)return;if(!fit.fits){toast(p.layout?.enabled?'Copies overlap or exceed the margins. Rearrange before exporting.':'Choose a larger sheet or Auto before exporting.');$(p.layout?.enabled?'#sheetLayoutPanel':'#pageSetup').open=true;$(p.layout?.enabled?'#sheetLayoutPanel':'#pageSetup').scrollIntoView({behavior:'smooth',block:'center'});return}const format=$('#format').value.toLowerCase();download(format==='svg'?exportSvg():exportDxf(),`fold-${selected.name.toLowerCase().replaceAll(' ','-')}-${G.round(p.w)}x${G.round(p.h)}mm${p.layout?.enabled?'-'+p.layout.items.length+'up':''}.${format}`,format==='svg'?'image/svg+xml':'application/dxf');toast(`${format.toUpperCase()} exported · ${sheetItems().length} copies at actual size`)};
-$('#print').onclick=()=>{if(errors.length)return;if(!fit.fits){toast('Copies overlap or do not fit. Rearrange them or choose a larger sheet.');return}showDieline();$('#drawing').innerHTML=sheetMarkup();$('#drawing').setAttribute('viewBox',`0 0 ${fit.sheetW} ${fit.sheetH}`);const restore=()=>{CanvasStudio.paint();window.removeEventListener('afterprint',restore)};window.addEventListener('afterprint',restore);window.print()};
+function preparePrint(){
+  let surface=document.getElementById('printSheet');if(!surface){surface=document.createElement('div');surface.id='printSheet';surface.setAttribute('aria-hidden','true');document.body.append(surface);}
+  if(errors.length||!geometry||!fit?.fits){surface.textContent='This design cannot be printed yet. Fix invalid dimensions, overlapping copies, or paper overflow in Fold, then print again.';return surface;}
+  updatePrintStyles();
+  const svg=document.importNode(new DOMParser().parseFromString(exportSvg(),'image/svg+xml').documentElement,true);
+  // Print has its own IDs: hidden editor definitions must never resolve its use/clip references.
+  const ids=new Map([...svg.querySelectorAll('[id]')].map(node=>[node.id,'print-'+node.id]));
+  svg.querySelectorAll('*').forEach(node=>{for(const attr of [...node.attributes]){let value=attr.value;if(attr.name==='id')value=ids.get(value)||value;else if(value.startsWith('#')||value.includes('url(#')){for(const [id,replacement]of ids){if(value==='#'+id)value='#'+replacement;value=value.split('url(#'+id+')').join('url(#'+replacement+')');}}if(value!==attr.value)node.setAttribute(attr.name,value);}});
+  surface.replaceChildren(svg);return surface;
+}
+window.addEventListener('beforeprint',preparePrint);
+$('#print').onclick=async()=>{
+  if(errors.length)return;if(!fit.fits){toast('Copies overlap or do not fit. Rearrange them or choose a larger sheet.');return}
+  const surface=preparePrint();
+  await Promise.all([...surface.querySelectorAll('image')].map(async node=>{const image=new Image();image.src=node.getAttribute('href');try{await image.decode()}catch{}}));
+  await new Promise(requestAnimationFrame);window.print();
+};
 document.addEventListener('keydown',e=>{const typing=['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName);if(e.key==='/'&&!typing){e.preventDefault();$('#search').focus()}if((e.ctrlKey||e.metaKey)&&!typing&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?$('#redo').click():$('#undo').click()}});
 CanvasStudio.init({
   paths:artworkDieline,artwork:ArtworkUI,layout:LayoutUI,dimensions:dimensionLines,display,from,unit:()=>unit,mode:()=>mode,invalid:()=>!!errors.length,state:()=>({...p}),onZoom:value=>zoom=value,refresh:renderDrawing,
