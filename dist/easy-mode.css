@@ -1,0 +1,65 @@
+/* Phase 2: one compact navigation row; keep the canvas as the main work surface. */
+@media screen {
+  body,body.mode-advanced{
+    grid-template-rows:60px 38px minmax(0,1fr)!important;
+    min-height:0;
+  }
+  .easy-toolbar{
+    height:38px;min-height:0;min-width:0;padding:2px 12px;
+    display:flex;align-items:center;gap:12px;overflow:hidden;
+    background:#fff;border-bottom:1px solid var(--line);
+  }
+  .easy-toolbar-actions{
+    display:flex;gap:2px;padding:2px;border:1px solid var(--line);
+    border-radius:8px;flex:0 0 auto;background:#fff;
+  }
+  .easy-toolbar-actions button{
+    border:0;border-radius:6px;padding:4px 10px;
+    background:transparent;color:var(--muted);font-size:11px;line-height:16px;
+  }
+  .easy-toolbar-actions button[aria-pressed=true]{
+    background:#edf1e8;color:var(--ink);font-weight:700;
+  }
+  .easy-steps{
+    display:flex;align-items:center;gap:4px;flex:1;min-width:0;
+    overflow-x:auto;border:0;padding:0;background:transparent;
+    scrollbar-width:thin;
+  }
+  .easy-steps[hidden]{display:none}
+  .easy-steps button{
+    white-space:nowrap;flex:0 0 auto;border:1px solid var(--line);
+    border-radius:7px;background:#fff;color:var(--muted);
+    padding:5px 10px;font-size:11px;line-height:16px;
+  }
+  .easy-steps button.active{
+    background:#edf1e8;border-color:#aab9a0;color:var(--ink);font-weight:700;
+  }
+  .workspace{
+    height:calc(100% - 12px)!important;min-height:0!important;
+    max-height:calc(100% - 12px)!important;align-self:stretch;
+  }
+  .mode-easy .scale-control,.mode-easy .custom-preset-row{display:none}
+  .mode-easy .settings-title h2::after{
+    content:' · Basic';font-size:12px;color:var(--muted);font-weight:500;
+  }
+}
+@media screen and (max-width:700px){
+  .easy-toolbar{padding:2px 8px;gap:6px}
+  .easy-toolbar-actions button{padding:4px 7px}
+  .easy-steps button{padding:5px 7px}
+}
+
+@media screen {
+ .easy-hint{grid-area:preview;margin:0 12px 8px;padding:9px 11px;border-radius:8px;background:#f3f5ef;color:#4e5f47;font-size:12px;line-height:1.4}
+ .easy-hint[hidden]{display:none}
+ .mode-easy #tab-geometry,.mode-easy #tab-arrange,.mode-easy #tab-more{display:none}
+ .mode-easy #tab-size,.mode-easy #tab-background,.mode-easy #tab-sheet{font-weight:600}
+}
+
+@media screen {
+ .easy-guide{grid-area:preview;display:flex;align-items:center;gap:8px;margin:0 0 6px;min-width:0}
+ .easy-guide[hidden]{display:none}
+ .easy-guide .easy-hint{grid-area:auto;flex:1;min-width:0;margin:0;padding:6px 8px;font-size:11px}
+ .easy-guide #easyNext{flex:0 0 auto;background:#465d36;color:#fff;border-radius:7px;padding:8px;font-size:11px}
+ .easy-guide #easyNext[hidden]{display:none}
+}
