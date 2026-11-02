@@ -71,9 +71,9 @@
   const feedback=document.createElement('span');feedback.id='autoFitNotice';feedback.className='auto-fit-result';feedback.setAttribute('role','status');feedback.hidden=true;fitLine.append(feedback);
   const viewMenu=document.createElement('details');viewMenu.className='view-menu';viewMenu.innerHTML=`<summary>${FoldIcons.svg('view')} View</summary>`;viewMenu.append(options);
   const dimensionControl=$('#showDimensions').closest('label');options.append(dimensionControl);
-  tools.append(viewMenu,fitLine);
-  $('#layoutTool').classList.add('arrange-button');$('.canvas-bar').insertBefore($('#layoutTool'),$('.canvas-actions'));
-  $('.sheet-layout-tools').append($('#layoutActions'));
+  $('.paper-tools').append(viewMenu);tools.append(fitLine);
+  $('#layoutTool').classList.add('arrange-button');$('#layoutActions').prepend($('#layoutTool'));$('.sheet-layout-tools').append($('#layoutActions'));
+  ['layoutDuplicate','layoutRotate','layoutFill'].forEach(id=>$('#'+id).addEventListener('click',()=>{if(LayoutUI.active()){show('sheet');selectSheet(1);}}));
   $('#fitA4').tabIndex=-1;
   viewMenu.addEventListener('toggle',()=>{if(viewMenu.open)exportMenu.open=false;});
   document.addEventListener('pointerdown',event=>{if(!viewMenu.contains(event.target))viewMenu.open=false;});
