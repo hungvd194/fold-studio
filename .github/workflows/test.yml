@@ -1,0 +1,18 @@
+name: Fold Studio tests
+on:
+  push:
+    branches: [main, phase-1-safety-trust]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check dist/app.js
+      - run: node --check dist/workspace.js
+      - run: npm test
+      # Export verifier requires three user-generated files; run it during export acceptance.

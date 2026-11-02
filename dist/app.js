@@ -5,6 +5,33 @@ const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 let selected=templates[0],p=G.defaults(selected),unit='mm',category='All',zoom=1,geometry,fit,errors=[],timer;
 let history=[],future=[],designs=[],sizePresets=[];
 let fitResult=null;
+// Browser-local recovery snapshot; failures must not prevent editing.
+const DRAFT_KEY='fold-recovery-draft-v1';
+let recoveryReady=false;
+let draftTimer=null;
+let savedFingerprint=null;
+function scheduleRecovery(){
+  if(!recoveryReady)return;
+  clearTimeout(draftTimer);
+  if(snapshot()===savedFingerprint){try{localStorage.removeItem(DRAFT_KEY)}catch{};return;}
+  draftTimer=setTimeout(()=>{
+    try{ArtworkUI.flush();localStorage.setItem(DRAFT_KEY,JSON.stringify({format:'fold-recovery',version:1,savedAt:Date.now(),state:p}));}
+    catch(error){console.warn('Recovery snapshot unavailable',error);}
+  },650);
+}
+function recoverDraft(){
+  let draft;
+  try{draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');}catch{return;}
+  if(!draft||draft.version!==1||!draft.state)return;
+  if(JSON.stringify(draft.state)===snapshot())return;
+  if(!window.confirm('An unfinished design was found in this browser. Restore it?')){
+    try{localStorage.removeItem(DRAFT_KEY);}catch{}
+    return;
+  }
+  try{applyState(draft.state);savedFingerprint=null;toast('Recovered your last working design. Save a copy or export a backup.');}
+  catch(error){toast('Recovery failed: '+error.message);}
+}
+
 const readStorage=(key)=>{try {const a=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(a)?a:[]}catch{return []}};
 designs=readStorage('fold-designs');sizePresets=readStorage('fold-size-presets');
 const display=v=>Number((unit==='mm'?v:v/25.4).toFixed(unit==='mm'?3:5));
@@ -54,23 +81,19 @@ function dimensionLines(g,rotated=false){
   if(!compact){widthAt[1]-=8*u;heightAt[1]-=8*u;}
   return `<g data-dimensions font-family="DM Sans,sans-serif" pointer-events="none">${bar([f.x,f.y+f.h*.42],[f.x+f.w,f.y+f.h*.42])}${bar([f.x+f.w*.72,f.y],[f.x+f.w*.72,f.y+f.h])}${label(widthAt,(compact?'W ':'')+widthText)}${label(heightAt,(compact?'H ':'')+heightText)}</g>`;
 }
+// Phase 1: never mutate physical dimensions merely to fit a sheet.
+// Users must explicitly choose a larger sheet or edit dimensions themselves.
 function keepDesignOnPaper(){
-  if(G.validate(selected,p).length||p.paper==='auto')return;
-  const key=state=>JSON.stringify([selected.id,state.paper,state.paperW,state.paperH,state.margin,...[...G.fields(selected.kind).main,...G.fields(selected.kind).extra].map(([name])=>state[name])]);
-  if(fitResult&&fitResult.key!==key(p))fitResult=null;
-  let maximumScale=1;
-  if(p.layout?.enabled){const g=G.generate(selected,p),W=p.paperW-2*p.margin,H=p.paperH-2*p.margin;for(const item of p.layout.items){const s=FoldLayout.shape(g,item.rotation);maximumScale=Math.min(maximumScale,W/s.w,H/s.h);}}
-  const next=G.fitDesign(selected,p,maximumScale);
-  if(next!==p){fitResult={key:key(next),percent:next.w/p.w*100};p=next;document.querySelectorAll('[data-param]').forEach(input=>{input.value=display(p[input.dataset.param]);});}
-  if(p.layout?.enabled){const g=G.generate(selected,p);p={...p,layout:{...p.layout,items:p.layout.items.map(item=>FoldLayout.move(item,g,p,0,0,0))}};}
+  fitResult=null;
 }
 function updateFitFeedback(){const notice=document.getElementById('autoFitNotice');if(!notice)return;notice.hidden=!fitResult||p.paper==='auto';notice.textContent=notice.hidden?'':`Auto-fit applied: ${Number(fitResult.percent.toFixed(1))}% · body ${display(p.w)} × ${display(p.h)} ${unit}`;}
-function renderDrawing(){keepDesignOnPaper();document.getElementById("fitA4").textContent=p.paper==='auto'?'Auto paper':'Auto-fit on';document.getElementById("fitA4").title='Designs automatically shrink proportionally to stay inside the printable paper area. Displayed dimensions are the actual export dimensions.';errors=G.validate(selected,p);document.querySelectorAll('[data-param]').forEach(el=>{const error=errors.find(e=>e.key===el.dataset.param);el.setCustomValidity(error?error.message:'');el.setAttribute('aria-invalid',String(Boolean(error)))});$('#validation').hidden=!errors.length;$('#validation').textContent=errors.length?errors.map(e=>e.message).join(' '):'';$('#download').disabled=!!errors.length;$('#print').disabled=!!errors.length;$('#save').disabled=!!errors.length;$('#savePreset').disabled=!!errors.length;$('#exportSettings').disabled=!!errors.length;$('#staleDrawing').hidden=!errors.length;
+function renderDrawing(){keepDesignOnPaper();document.getElementById("fitA4").textContent=p.paper==='auto'?'Auto paper':'Actual size';document.getElementById("fitA4").title='Physical dimensions are preserved. Select a larger sheet if the dieline does not fit.';errors=G.validate(selected,p);document.querySelectorAll('[data-param]').forEach(el=>{const error=errors.find(e=>e.key===el.dataset.param);el.setCustomValidity(error?error.message:'');el.setAttribute('aria-invalid',String(Boolean(error)))});$('#validation').hidden=!errors.length;$('#validation').textContent=errors.length?errors.map(e=>e.message).join(' '):'';$('#download').disabled=!!errors.length;$('#print').disabled=!!errors.length;$('#save').disabled=!!errors.length;$('#savePreset').disabled=!!errors.length;$('#exportSettings').disabled=!!errors.length;$('#staleDrawing').hidden=!errors.length;
   if(errors.length){$('#sheetSize').textContent='Invalid dimensions';$('#paperStatus').textContent='Fix the marked values before exporting.';return}
   geometry=G.generate(selected,p);const g=geometry;fit=G.sheetFit(g,p);if(p.layout?.enabled){const check=FoldLayout.check(p.layout,g,p);fit={sheetW:p.paperW,sheetH:p.paperH,rotate:false,fits:check.fits,layout:check}}ArtworkUI.sync();LayoutUI.sync();
-  CanvasStudio.render(g,p,fit,selected);$('#sheetSize').textContent=`${display(g.bw)} × ${display(g.bh)} ${unit}`;$('#sheetTotal').textContent=`${display(fit.sheetW)} × ${display(fit.sheetH)} ${unit}`;$('#bodySize').textContent=`${display(g.body.w)} × ${display(g.body.h)}${['box','bag','tray'].includes(selected.kind)?' × '+display(g.body.d):''} ${unit}`;$('#paperStatus').textContent=fit.fits?(fit.rotate?'Fits rotated 90° · print at actual size':'Auto-fit on · actual size with sheet margins'):'Dieline exceeds the usable sheet area';$('#paperStatus').classList.toggle('warning',!fit.fits);$('#canvasUnit').textContent=unit==='mm'?'millimeters':'inches';document.documentElement.style.setProperty('--paper',colors[p.stock]);updatePrintStyles();
+  CanvasStudio.render(g,p,fit,selected);$('#sheetSize').textContent=`${display(g.bw)} × ${display(g.bh)} ${unit}`;$('#sheetTotal').textContent=`${display(fit.sheetW)} × ${display(fit.sheetH)} ${unit}`;$('#bodySize').textContent=`${display(g.body.w)} × ${display(g.body.h)}${['box','bag','tray'].includes(selected.kind)?' × '+display(g.body.d):''} ${unit}`;$('#paperStatus').textContent=fit.fits?(fit.rotate?'Fits rotated 90° · print at actual size':'Fits at actual size with sheet margins'):'Dieline exceeds the usable sheet area';$('#paperStatus').classList.toggle('warning',!fit.fits);const overflow=document.getElementById('sheetOverflowPanel');if(overflow){overflow.hidden=fit.fits||Boolean(p.layout?.enabled);}$('#canvasUnit').textContent=unit==='mm'?'millimeters':'inches';document.documentElement.style.setProperty('--paper',colors[p.stock]);updatePrintStyles();
   if(p.layout?.enabled){$('#paperStatus').textContent=fit.fits?`${p.layout.items.length} ${p.layout.items.length===1?'copy':'copies'} · actual size`:`${fit.layout.outside.length} outside · ${fit.layout.pairs.length} overlapping / too close`}
   updateFitFeedback();
+  scheduleRecovery();
 }
 function updatePrintStyles(){if(!geometry)return;let style=$('#printPageStyle');if(!style){style=document.createElement('style');style.id='printPageStyle';document.head.append(style)}style.textContent=`@media print{@page{size:${fit.sheetW}mm ${fit.sheetH}mm;margin:0}body>#printSheet{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}#printSheet>svg{width:${fit.sheetW}mm!important;height:${fit.sheetH}mm!important}}`}
 function setZoom(v){CanvasStudio.setZoom(v)}
@@ -82,6 +105,7 @@ function renderPresets(){$('#customPresets').innerHTML='<option value="">Your sa
 function migrateDesign(v){const t=templates.find(t=>t.id===(v.state?.template||v.template));if(!t)throw new Error('Template is unavailable');if(v.state)return v.state;return {...G.defaults(t),w:v.w,h:v.h,d:v.d||40,top:v.flap||40,thickness:v.thickness||.3,stock:v.stock||'ivory'}}
 $('#search').oninput=renderLibrary;$('#sort').onchange=renderLibrary;$('#plus').onclick=()=>setZoom(zoom+.1);$('#minus').onclick=()=>setZoom(zoom-.1);$('#fit').onclick=()=>{CanvasStudio.fitView();zoom=1};$('#showDimensions').onchange=renderDrawing;
 $('#stock').onchange=e=>{remember();p.stock=e.target.value;renderDrawing();renderLibrary()};
+$('#useAutoPaper').onclick=()=>{if(p.layout?.enabled){toast('Disable multi-copy layout before choosing Auto paper.');return}$('#paper').value='auto';$('#paper').dispatchEvent(new Event('change'))};
 $('#paper').onchange=e=>{remember();p.paper=e.target.value;if(p.paper==='auto'&&p.layout?.enabled)p.layout={...p.layout,enabled:false};const sizes={a4:[210,297],a3:[297,420],letter:[215.9,279.4]};if(sizes[p.paper])[p.paperW,p.paperH]=sizes[p.paper];renderFields();renderDrawing()};
 document.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{unit=b.dataset.unit;document.querySelectorAll('[data-unit]').forEach(x=>x.classList.toggle('selected',x===b));renderFields();renderDrawing()});
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{remember();[p.w,p.h]=b.dataset.size.split(',').map(Number);p.lock=false;renderFields();renderDrawing()});
@@ -94,8 +118,8 @@ $('#savePreset').onclick=()=>{if(errors.length)return;openModal('<h2 class="moda
 $('#customPresets').onchange=e=>{const v=sizePresets.find(v=>v.id===e.target.value);if(v)try{applyState(v.state);$('#customPresets').value=v.id}catch(err){toast(err.message)}};
 $('#exportSettings').onclick=()=>{if(errors.length)return;try{const assets=FoldArtwork.bundle(p.artwork);download(JSON.stringify({format:'fold-design',version:1,name:selected.name,state:p,assets},null,2),'fold-'+selected.name.toLowerCase().replaceAll(' ','-')+'-settings.json','application/json');toast('Editable settings and images exported')}catch(error){toast(error.message)}};
 $('#importSettings').onclick=()=>$('#settingsFile').click();$('#settingsFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>30000000)throw new Error('Settings file must be smaller than 30 MB including images.');const data=JSON.parse(await file.text());if(data.format!=='fold-design'||data.version!==1||!data.state)throw new Error('Choose a Fold settings JSON file (version 1).');const assets=FoldArtwork.validateAssets(data.assets||[]),art=FoldArtwork.normalize(data.state.artwork),known=new Set([...FoldArtwork.cache.keys(),...assets.map(a=>a.id)]);if(FoldArtwork.assetIds(art).some(id=>!known.has(id)))throw new Error('This settings file is missing an embedded image. Export a fresh backup from the original browser.');const stored=assets.length?await FoldArtwork.saveAssets(assets):true;applyState(data.state);toast(stored?'Settings and images imported':'Imported for this session. Export JSON to keep a backup.')}catch(err){toast('Import failed: '+err.message)}e.target.value=''};
-$('#save').onclick=()=>{if(errors.length)return;const v={id:Date.now(),name:selected.name,state:{...p}};if(store('fold-designs',[...designs,v])){designs.push(v);$('#savedCount').textContent=designs.length;$('#save').innerHTML=FoldIcons.svg('save');document.getElementById('save').classList.add('is-saved');toast('Design saved in this browser')}};
-$('#projects').onclick=()=>{openModal('<h2 class="modal-title">My designs</h2><p class="muted">Saved locally in this browser, including every custom dimension.</p>'+(designs.length?designs.map(v=>`<button class="saved-item" data-saved="${escapeHtml(v.id)}"><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.state?`${v.state.w} × ${v.state.h}`:`${v.w} × ${v.h}`)} mm ↗</span></button>`).join(''):'<p class="instruction">Use the heart beside a template to save your first design.</p>'));document.querySelectorAll('[data-saved]').forEach(b=>b.onclick=()=>{try{const v=designs.find(x=>String(x.id)===b.dataset.saved);applyState(migrateDesign(v));$('#modal').close()}catch(err){toast(err.message)}})};
+$('#save').onclick=()=>{if(errors.length)return;const v={id:Date.now(),name:selected.name,state:{...p}};if(store('fold-designs',[...designs,v])){designs.push(v);savedFingerprint=snapshot();try{localStorage.removeItem(DRAFT_KEY)}catch{};$('#savedCount').textContent=designs.length;$('#save').innerHTML=FoldIcons.svg('save');document.getElementById('save').classList.add('is-saved');toast('Design saved in this browser')}};
+$('#projects').onclick=()=>{openModal('<h2 class="modal-title">My designs</h2><p class="muted">Saved locally in this browser, including every custom dimension.</p>'+(designs.length?designs.map(v=>`<button class="saved-item" data-saved="${escapeHtml(v.id)}"><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.state?`${v.state.w} × ${v.state.h}`:`${v.w} × ${v.h}`)} mm ↗</span></button>`).join(''):'<p class="instruction">Use the heart beside a template to save your first design.</p>'));document.querySelectorAll('[data-saved]').forEach(b=>b.onclick=()=>{try{const v=designs.find(x=>String(x.id)===b.dataset.saved);applyState(migrateDesign(v));savedFingerprint=snapshot();try{localStorage.removeItem(DRAFT_KEY)}catch{};$('#modal').close()}catch(err){toast(err.message)}})};
 $('#browse').onclick=()=>{$('#search').value='';category='All';renderLibrary();$('.library').scrollIntoView({behavior:'smooth'})};$('.close').onclick=()=>$('#modal').close();$('#modal').onclick=e=>{if(e.target===$('#modal'))$('#modal').close()};
 $('#instructions').onclick=()=>openModal(`<h2 class="modal-title">Fold your ${selected.name.toLowerCase()}</h2><ol class="instruction"><li>Print at <b>100% / actual size</b>. Verify a measured edge first.</li><li>Cut along the orange outline${selected.kind==='tag'?' and punch the hole':''}.</li><li>Score the dashed green folds before assembly.</li><li>${selected.kind==='envelope'?'Fold side tabs inward, glue the side edges of the bottom flap, then fold it upward. Keep the pocket opening clear.':selected.kind==='tray'?'Raise the four walls. This open tray has no glue tabs; tape the corners for a prototype.':selected.kind==='tag'?'Thread a ribbon through the hole and attach to your gift.':'Form the side seam at the glue tab. Fold the base and closure panels; use paper glue where needed.'}</li><li>Make a paper prototype. Stock thickness is recorded but does not automatically compensate the geometry.</li></ol>`);
 $('#guide').onclick=()=>openModal('<h2 class="modal-title">Make every fold your own.</h2><ol class="instruction"><li>Enter width, height, and depth where applicable. Dimensions support 1–5,000 mm and decimal input.</li><li>Use aspect lock, swap width/height, or scale the whole dieline.</li><li>Use Flaps → Outline to change flap shapes, or Flap sizes for lengths, chamfers, curves, and tag holes.</li><li>Content clearance adds space to both sides of the body. The actual panel size is shown in the summary.</li><li>Choose paper and margins in Paper. Auto-fit shrinks oversized designs and shows the resulting dimensions. Export in the header offers actual-size SVG, DXF and PDF printing.</li><li>Save a named custom size or export/import editable JSON settings. Everything stays local.</li></ol><p class="muted">Thickness is recorded, not compensated. Folded preview is illustrative. Test a prototype before production.</p>');
@@ -129,7 +153,7 @@ CanvasStudio.init({
   edit:(key,value)=>{const next=FoldCanvasModel.change(selected,p,key,value),invalid=G.validate(selected,next);if(invalid.length){toast(invalid[0].message);return}remember();p=next;renderFields();renderDrawing()},
   paper:value=>{const input=$('#paper');input.value=value;input.dispatchEvent(new Event('change'))},
   orientation:()=>{if(p.paper==='auto')return;remember();[p.paperW,p.paperH]=[p.paperH,p.paperW];renderFields();renderDrawing()},
-  fitPaper:()=>{if(errors.length)return;if(p.paper==='auto'){toast('Auto already fits the dieline. Select A4 to fit to a fixed sheet.');return}const availableW=p.paperW-2*p.margin,availableH=p.paperH-2*p.margin;const factor=Math.min(1,Math.max(Math.min(availableW/geometry.bw,availableH/geometry.bh),Math.min(availableW/geometry.bh,availableH/geometry.bw)));if(factor>=1){toast('The dieline already fits this sheet.');return}const next={...p};for(const [key]of [...G.fields(selected.kind).main,...G.fields(selected.kind).extra])next[key]=G.round(next[key]*factor*.999999);const invalid=G.validate(selected,next);if(invalid.length){toast('Cannot fit at this size: '+invalid[0].message);return}remember();p=next;renderFields();renderDrawing();CanvasStudio.fitView();toast('Dieline scaled to '+Math.floor(factor*100)+'% to fit. Undo restores original dimensions.')}
+  fitPaper:()=>{if(errors.length)return;if(p.paper==='auto'){toast('Auto already fits the dieline. Select A4 to fit to a fixed sheet.');return}const availableW=p.paperW-2*p.margin,availableH=p.paperH-2*p.margin;const factor=Math.min(1,Math.max(Math.min(availableW/geometry.bw,availableH/geometry.bh),Math.min(availableW/geometry.bh,availableH/geometry.bw)));if(factor>=1){toast('The dieline already fits this sheet.');return}const next={...p};for(const [key]of [...G.fields(selected.kind).main,...G.fields(selected.kind).extra])next[key]=G.round(next[key]*factor*.999999);const invalid=G.validate(selected,next);if(invalid.length){toast('Cannot fit at this size: '+invalid[0].message);return}if(!window.confirm(`This will change the actual product dimensions from ${display(p.w)} × ${display(p.h)} ${unit} to ${display(next.w)} × ${display(next.h)} ${unit}. Continue?`))return;remember();p=next;renderFields();renderDrawing();CanvasStudio.fitView();toast('Dieline scaled to '+Math.floor(factor*100)+'% to fit. Undo restores original dimensions.')}
 });
 ArtworkUI.init({state:()=>({...p}),template:()=>selected,geometry:()=>geometry,refresh:renderDrawing,flat:()=>showDieline(),toast,
   change:(state,commit=true)=>{if(commit)remember();p=state;renderDrawing()},
@@ -141,3 +165,6 @@ LayoutUI.init({state:()=>({...p}),geometry:()=>geometry,refresh:renderDrawing,fl
 });
 new ResizeObserver(()=>{if(!errors.length)renderDrawing()}).observe($('#canvas'));
 $('#savedCount').textContent=designs.length;choose(selected.id);
+savedFingerprint=snapshot();
+recoveryReady=true;
+recoverDraft();
