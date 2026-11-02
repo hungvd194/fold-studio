@@ -11,7 +11,7 @@ test('render path never scales physical dimensions to fit paper',()=>{
 });
 
 test('manual fit requires explicit confirmation before changing dimensions',()=>{
-  const section=app.slice(app.indexOf('fitPaper:()=>'),app.indexOf('\n});',app.indexOf('fitPaper:()=>'));
+  const section=app.slice(app.indexOf('fitPaper:()=>'),app.indexOf('\n});',app.indexOf('fitPaper:()=>')));
   assert.match(section,/window\.confirm/);
   assert(section.indexOf('window.confirm')<section.indexOf('p=next'));
 });
