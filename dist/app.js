@@ -121,7 +121,28 @@ $('#importSettings').onclick=()=>$('#settingsFile').click();$('#settingsFile').o
 $('#save').onclick=()=>{if(errors.length)return;const v={id:Date.now(),name:selected.name,state:{...p}};if(store('fold-designs',[...designs,v])){designs.push(v);savedFingerprint=snapshot();try{localStorage.removeItem(DRAFT_KEY)}catch{};$('#savedCount').textContent=designs.length;$('#save').innerHTML=FoldIcons.svg('save');document.getElementById('save').classList.add('is-saved');toast('Design saved in this browser')}};
 $('#projects').onclick=()=>{openModal('<h2 class="modal-title">My designs</h2><p class="muted">Saved locally in this browser, including every custom dimension.</p>'+(designs.length?designs.map(v=>`<button class="saved-item" data-saved="${escapeHtml(v.id)}"><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.state?`${v.state.w} × ${v.state.h}`:`${v.w} × ${v.h}`)} mm ↗</span></button>`).join(''):'<p class="instruction">Use the heart beside a template to save your first design.</p>'));document.querySelectorAll('[data-saved]').forEach(b=>b.onclick=()=>{try{const v=designs.find(x=>String(x.id)===b.dataset.saved);applyState(migrateDesign(v));savedFingerprint=snapshot();try{localStorage.removeItem(DRAFT_KEY)}catch{};$('#modal').close()}catch(err){toast(err.message)}})};
 $('#browse').onclick=()=>{$('#search').value='';category='All';renderLibrary();$('.library').scrollIntoView({behavior:'smooth'})};$('.close').onclick=()=>$('#modal').close();$('#modal').onclick=e=>{if(e.target===$('#modal'))$('#modal').close()};
-$('#instructions').onclick=()=>openModal(`<h2 class="modal-title">Fold your ${selected.name.toLowerCase()}</h2><ol class="instruction"><li>Print at <b>100% / actual size</b>. Verify a measured edge first.</li><li>Cut along the orange outline${selected.kind==='tag'?' and punch the hole':''}.</li><li>Score the dashed green folds before assembly.</li><li>${selected.kind==='envelope'?'Fold side tabs inward, glue the side edges of the bottom flap, then fold it upward. Keep the pocket opening clear.':selected.kind==='tray'?'Raise the four walls. This open tray has no glue tabs; tape the corners for a prototype.':selected.kind==='tag'?'Thread a ribbon through the hole and attach to your gift.':'Form the side seam at the glue tab. Fold the base and closure panels; use paper glue where needed.'}</li><li>Make a paper prototype. Stock thickness is recorded but does not automatically compensate the geometry.</li></ol>`);
+$('#instructions').onclick=()=>{
+  const kind=selected.kind,steps=FoldVisual.steps(kind);
+  const safeName=escapeHtml(selected.name);
+  const body=()=>'<div class="fold-guide"><div class="fold-guide-visual" id="foldGuidePreview"></div><div class="fold-guide-content"><p class="fold-guide-caption">Illustrative 2D assembled view · not a 3D simulation or printable template</p><div class="fold-guide-progress" id="foldGuideProgress"></div><h3 id="foldGuideTitle"></h3><p id="foldGuideDescription"></p><div class="fold-guide-controls"><button type="button" id="foldGuideBack">← Previous</button><span id="foldGuideCount"></span><button type="button" id="foldGuideNext">Next →</button></div><p class="fold-guide-note">Print at actual size, cut the solid outline and score dashed folds first. Verify a paper prototype before production.</p></div></div>';
+  openModal('<h2 class="modal-title">Fold your '+safeName+'</h2>'+body());
+  let stage=0;
+  function update(){
+    const current=steps[stage];
+    $('#foldGuidePreview').innerHTML=FoldVisual.preview(kind,p,stage);
+    $('#foldGuideTitle').textContent=current.title;
+    $('#foldGuideDescription').textContent=current.description;
+    $('#foldGuideCount').textContent=(stage+1)+' / '+steps.length;
+    $('#foldGuideProgress').innerHTML=steps.map((item,i)=>'<button type="button" data-fold-step="'+i+'" '+(i===stage?'aria-current="step"':'')+' aria-label="Step '+(i+1)+': '+escapeHtml(item.title)+'">'+(i+1)+'</button>').join('');
+    $('#foldGuideBack').disabled=stage===0;
+    $('#foldGuideNext').disabled=stage===steps.length-1;
+    document.querySelectorAll('[data-fold-step]').forEach(button=>button.onclick=()=>{stage=Number(button.dataset.foldStep);update()});
+  }
+  $('#foldGuideBack').onclick=()=>{if(stage>0){stage--;update()}};
+  $('#foldGuideNext').onclick=()=>{if(stage<steps.length-1){stage++;update()}};
+  update();
+};
+$('#foldGuideLaunch').onclick=()=>$('#instructions').click();
 $('#guide').onclick=()=>openModal('<h2 class="modal-title">Make every fold your own.</h2><ol class="instruction"><li>Enter width, height, and depth where applicable. Dimensions support 1–5,000 mm and decimal input.</li><li>Use aspect lock, swap width/height, or scale the whole dieline.</li><li>Use Flaps → Outline to change flap shapes, or Flap sizes for lengths, chamfers, curves, and tag holes.</li><li>Content clearance adds space to both sides of the body. The actual panel size is shown in the summary.</li><li>Choose paper and margins in Paper. Auto-fit shrinks oversized designs and shows the resulting dimensions. Export in the header offers actual-size SVG, DXF and PDF printing.</li><li>Save a named custom size or export/import editable JSON settings. Everything stays local.</li></ol><p class="muted">Thickness is recorded, not compensated. Folded preview is illustrative. Test a prototype before production.</p>');
 function sheetItems(){return p.layout?.enabled?p.layout.items:[{id:'single',x:p.margin,y:p.margin,rotation:fit.rotate?90:0}]}
 function sheetMarkup(){return `<defs><g id="export-master">${artworkDieline(geometry,true)}</g></defs>${sheetItems().map(item=>`<g data-sheet-copy="${item.id}" transform="${FoldLayout.transform(item,geometry)}"><use href="#export-master"/></g>`).join('')}`}
