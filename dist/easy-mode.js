@@ -6,7 +6,7 @@
   const easy=document.getElementById('easyMode');
   const advanced=document.getElementById('advancedMode');
   const key='fold-editor-mode-v1';
-  const targets={1:'.library',2:'.settings #fields',3:'#artworkPanel',4:'.export'};
+  const targets={1:'.library',2:'.settings #fields',3:'#artTool',4:'.export'};
   let mode='easy',step=1;
   try{mode=localStorage.getItem(key)==='advanced'?'advanced':'easy'}catch{}
   function render(){
@@ -29,8 +29,8 @@
     step=Number(button.dataset.easyStep);
     render();
     if(step===3){
-      const artwork=document.getElementById('artworkPanel');
-      if(artwork)artwork.open=true;
+      const artwork=document.getElementById('artTool');
+      if(artwork)artwork.click();
     }
     if(step===4){
       const paper=document.getElementById('pageSetup');
