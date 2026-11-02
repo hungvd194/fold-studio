@@ -41,3 +41,10 @@ test('advanced controls remain accessible after switching modes',()=>{
   assert(js.includes("setMode('easy')"));
   assert(css.includes('.mode-easy #tab-geometry'));
 });
+
+test('guided next action and context panel are wired',()=>{
+  assert(html.includes('id="easyGuide"'));
+  assert(html.includes('id="easyNext"'));
+  assert(js.includes("const next=document.getElementById('easyNext')"));
+  assert(js.includes("next.addEventListener('click'"));
+});
