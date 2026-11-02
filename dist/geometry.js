@@ -15,8 +15,10 @@
     {id:'TAG–001',name:'Gift tag',category:'More',kind:'tag',w:55,h:90,tag:'Finishing · Hang tag'}
   ];
   const round = n => Math.round(n * 1e6) / 1e6;
+  const shapeFields = kind => ['envelope','tray'].includes(kind)?[['topShape','Top flap'],['bottomShape','Bottom flap'],['leftShape','Left flap'],['rightShape','Right flap']]:['box','bag'].includes(kind)?[['topShape','Top closure flaps'],['bottomShape','Bottom closure flaps'],['glueShape','Glue tab']]:[];
+  const inset = (p,key) => p[key]==='rectangle'?0:p.corner;
   function defaults(t) {
-    return {template:t.id,w:t.w,h:t.h,d:t.d||40,top:40,bottom:round(t.h*.64),left:Math.min(25,t.w*.18),right:Math.min(25,t.w*.18),glue:12,corner:Math.min(10,t.w/5,t.h/5),curve:15,hole:5,holeOffset:12,clearance:0,thickness:.3,stock:'ivory',paper:'a4',paperW:210,paperH:297,margin:5,lock:false,artwork:{mode:'global',global:null,parts:{}},layout:{enabled:false,gap:3,autoRotate:true,items:[]}};
+    return {template:t.id,w:t.w,h:t.h,d:t.d||40,topShape:'trapezoid',bottomShape:'trapezoid',leftShape:'trapezoid',rightShape:'trapezoid',glueShape:'trapezoid',top:40,bottom:round(t.h*.64),left:Math.min(25,t.w*.18),right:Math.min(25,t.w*.18),glue:12,corner:Math.min(10,t.w/5,t.h/5),curve:15,hole:5,holeOffset:12,clearance:0,thickness:.3,stock:'ivory',paper:'a4',paperW:210,paperH:297,margin:5,lock:false,artwork:{mode:'global',global:null,parts:{}},layout:{enabled:false,gap:3,autoRotate:true,items:[]}};
   }
   function fields(kind) {
     const main=[['w','Width',1,5000],['h','Height',1,5000]];
@@ -39,12 +41,13 @@
       if (typeof p[key]!=='number'||!Number.isFinite(p[key])||p[key]<min||p[key]>max) errors.push({key,message:`${label}: ${min}–${max} mm.`});
     }
     const W=p.w+2*p.clearance,H=p.h+2*p.clearance;
+    for(const [key,label] of shapeFields(t.kind))if(p[key]!==undefined&&!['trapezoid','rectangle'].includes(p[key]))errors.push({key,message:`${label}: choose Trapezoid or Rectangle.`});
     if (t.kind==='envelope') {
-      if(p.corner>Math.min(W/2,H/2,p.top,p.bottom,p.left,p.right)) errors.push({key:'corner',message:'Chamfer must fit inside every flap and half the body width/height.'});
+      if(['top','bottom','left','right'].some(side=>inset(p,side+'Shape')>Math.min(['top','bottom'].includes(side)?W/2:H/2,p[side]))) errors.push({key:'corner',message:'Chamfer must fit inside each trapezoid flap and half its fold edge.'});
     } else if(['box','bag'].includes(t.kind)) {
-      if(p.corner>Math.min(W/2,H/2,p.top/2,p.bottom/2,p.glue)) errors.push({key:'corner',message:'Tab chamfer must fit half a closure flap, half the body, and the glue tab.'});
+      if(inset(p,'topShape')>Math.min(W/2,H/2,p.top/2)||inset(p,'bottomShape')>Math.min(W/2,H/2,p.bottom/2)||inset(p,'glueShape')>Math.min(H/2,p.glue)) errors.push({key:'corner',message:'Chamfer must fit the trapezoid closure flaps and glue tab.'});
     } else if(t.kind==='tray') {
-      if(p.corner>Math.min(W/2,H/2,p.d)) errors.push({key:'corner',message:'Wall chamfer must fit the wall height and half the base dimensions.'});
+      if(['top','bottom','left','right'].some(side=>inset(p,side+'Shape')>Math.min(['top','bottom'].includes(side)?W/2:H/2,p.d))) errors.push({key:'corner',message:'Chamfer must fit each trapezoid wall and half its fold edge.'});
     } else if(t.kind==='pillow' && p.curve*2>=H) errors.push({key:'curve',message:'Curve rise must be less than half the body height.'});
     else if(t.kind==='tag') {
       if(p.corner>Math.min(W/2,H/2)) errors.push({key:'corner',message:'Shoulder chamfer cannot exceed half the tag width or height.'});
@@ -63,15 +66,16 @@
     const W=p.w+2*p.clearance,H=p.h+2*p.clearance,D=p.d+2*p.clearance;
     let cut=[],fold=[],circles=[],bw,bh,face;
     const line=(x,y,a,b)=>fold.push([[x,y],[a,b]]),c=p.corner;
+    const ct=inset(p,'topShape'),cb=inset(p,'bottomShape'),cl=inset(p,'leftShape'),cr=inset(p,'rightShape');
     if(t.kind==='envelope') {
       const x=p.left,y=p.top,b=p.bottom,R=p.right;
       bw=x+W+R;bh=y+H+b;
-      cut=[[x,y],[x+c,0],[x+W-c,0],[x+W,y],[bw,y+c],[bw,y+H-c],[x+W,y+H],[x+W-c,bh],[x+c,bh],[x,y+H],[0,y+H-c],[0,y+c]];
+      cut=[[x,y],[x+ct,0],[x+W-ct,0],[x+W,y],[bw,y+cr],[bw,y+H-cr],[x+W,y+H],[x+W-cb,bh],[x+cb,bh],[x,y+H],[0,y+H-cl],[0,y+cl]];
       line(x,y,x+W,y);line(x,y+H,x+W,y+H);line(x,y,x,y+H);line(x+W,y,x+W,y+H);
       face={x,y,w:W,h:H};
     } else if(t.kind==='tray') {
       bw=W+2*D;bh=H+2*D;
-      cut=[[D,D],[D+c,0],[D+W-c,0],[D+W,D],[bw,D+c],[bw,D+H-c],[D+W,D+H],[D+W-c,bh],[D+c,bh],[D,D+H],[0,D+H-c],[0,D+c]];
+      cut=[[D,D],[D+ct,0],[D+W-ct,0],[D+W,D],[bw,D+cr],[bw,D+H-cr],[D+W,D+H],[D+W-cb,bh],[D+cb,bh],[D,D+H],[0,D+H-cl],[0,D+cl]];
       line(D,D,D+W,D);line(D,D+H,D+W,D+H);line(D,D,D,D+H);line(D+W,D,D+W,D+H);face={x:D,y:D,w:W,h:H};
     } else if(t.kind==='pillow') {
       const G=p.glue,C=p.curve,y=C;bw=G+W*2;bh=H+C*2;
@@ -91,7 +95,8 @@
     } else {
       const G=p.glue,T=p.top,B=p.bottom,y=T;bw=G+2*W+2*D;bh=T+H+B;
       const dustT=Math.min(T,D*.7),dustB=Math.min(B,D*.7),x1=G,x2=G+W,x3=x2+D,x4=x3+W;
-      cut=[[0,y+c],[G,y],[G+c,0],[x2-c,0],[x2,y],[x2+D*.2,y-dustT],[x3-D*.2,y-dustT],[x3,y],[x3+c,0],[x4-c,0],[x4,y],[x4+D*.2,y-dustT],[bw-D*.2,y-dustT],[bw,y],[bw,y+H],[bw-D*.2,y+H+dustB],[x4+D*.2,y+H+dustB],[x4,y+H],[x4-c,bh],[x3+c,bh],[x3,y+H],[x3-D*.2,y+H+dustB],[x2+D*.2,y+H+dustB],[x2,y+H],[x2-c,bh],[G+c,bh],[G,y+H],[0,y+H-c]];
+      const cg=inset(p,'glueShape'),dt=p.topShape==='rectangle'?0:D*.2,db=p.bottomShape==='rectangle'?0:D*.2;
+      cut=[[0,y+cg],[G,y],[G+ct,0],[x2-ct,0],[x2,y],[x2+dt,y-dustT],[x3-dt,y-dustT],[x3,y],[x3+ct,0],[x4-ct,0],[x4,y],[x4+dt,y-dustT],[bw-dt,y-dustT],[bw,y],[bw,y+H],[bw-db,y+H+dustB],[x4+db,y+H+dustB],[x4,y+H],[x4-cb,bh],[x3+cb,bh],[x3,y+H],[x3-db,y+H+dustB],[x2+db,y+H+dustB],[x2,y+H],[x2-cb,bh],[G+cb,bh],[G,y+H],[0,y+H-cg]];
       line(G,y,bw,y);line(G,y+H,bw,y+H);for(const x of [G,x2,x3,x4])line(x,y,x,y+H);
       if(t.kind==='bag'){line(x2+D/2,y,x2+D/2,y+H);line(x4+D/2,y,x4+D/2,y+H)}
       face={x:G,y,w:W,h:H};
@@ -104,5 +109,16 @@
     const normal=g.bw<=availableW+1e-6&&g.bh<=availableH+1e-6,rotated=g.bh<=availableW+1e-6&&g.bw<=availableH+1e-6;
     return {sheetW:round(sheetW),sheetH:round(sheetH),fits:normal||rotated,rotate:!normal&&rotated};
   }
-  return {templates,defaults,fields,validate,generate,sheetFit,round};
+  function fitDesign(t,p,maximumScale=1) {
+    if(validate(t,p).length||p.paper==='auto')return p;
+    const g=generate(t,p),W=p.paperW-2*p.margin,H=p.paperH-2*p.margin;
+    const factor=Math.min(1,maximumScale,Math.max(Math.min(W/g.bw,H/g.bh),Math.min(W/g.bh,H/g.bw)));
+    if(factor>=1)return p;
+    const next={...p};
+    for(const [key,,min] of [...fields(t.kind).main,...fields(t.kind).extra])next[key]=Math.max(min,Math.floor(p[key]*factor*1e6)/1e6);
+    // Minimum field sizes can prevent a proportional fit on exceptionally small paper.
+    if(validate(t,next).length)return p;
+    return next;
+  }
+  return {templates,defaults,fields,shapeFields,validate,generate,sheetFit,fitDesign,round};
 });

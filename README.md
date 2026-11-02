@@ -10,21 +10,29 @@ Run `npm start` (or `node serve.cjs`) and open http://127.0.0.1:4381. No build o
 
 Import this GitHub repository in Vercel. The included `vercel.json` serves `dist` directly, with no build command. Browser storage is specific to each domain; export a JSON backup to transfer existing local designs to the hosted app.
 
+## Workspace
+
+The editor fits the browser viewport. Desktop keeps the template library, live canvas, and inspector side by side. Body, Flaps, Artwork, Paper, and More tabs group the settings. Export in the shared header provides SVG, DXF, and Print / Save PDF from every view. Long settings scroll inside the inspector without moving the canvas. Tablet shows the canvas and inspector side by side, with Templates as a separate view. Phone screens switch between Templates, Canvas, and Settings; a live miniature preview stays visible above the phone inspector. View groups the grid, snapping, handles, and dimension overlays. Main controls use 12–14 px text with darker secondary labels and SVG icons.
+
+## Custom flap shapes
+
+Open **Flaps** to choose **Trapezoid** or **Rectangle** independently for the top, bottom, left and right flaps of envelopes and trays. Boxes and bags expose top closure flaps, bottom closure flaps and the glue tab; each closure choice applies to its matching pair of main flaps and side dust flaps. Rectangle keeps the full outer edge with square corners; Trapezoid uses the existing chamfer. Changing a shape preserves body dimensions, flap lengths and fold edges. Artwork remains clipped to the updated outline. Choices are included in undo/redo, saved designs, presets, JSON, SVG, DXF and printing. Older designs retain their original trapezoid outlines. Pillow closures and tag shapes keep their existing numeric controls.
+
 ## Custom dimensions
 
 ### Multiple copies on one A4 sheet
 
-Choose **Sheet layout** above the canvas to place multiple copies of the current design on a fixed paper size. Auto paper switches to A4 on entering this mode. **Duplicate** adds the selected copy in a free position; **90°** rotates the selection; the **Copies on sheet** panel also accepts arbitrary rotation angles and precise X/Y positions. Drag a copy or use arrow keys to move it (Shift = 10 mm, Alt = 0.1 mm). Ctrl+D duplicates, R rotates, and Delete removes a copy. Each completed operation can be undone.
+Choose **Arrange** above the canvas to place multiple copies of the current design on a fixed paper size. Auto paper switches to A4 on entering this mode. **Duplicate** adds the selected copy in a free position; **90°** rotates the selection; the **Copies on sheet** panel also accepts arbitrary rotation angles and precise X/Y positions. Drag a copy or use arrow keys to move it (Shift = 10 mm, Alt = 0.1 mm). Ctrl+D duplicates, R rotates, and Delete removes a copy. Each completed operation can be undone.
 
 **Fill sheet** fills the printable area with a grid at the existing physical dimensions, using the configured gap and optional 90° rotation. It compares row orientations, including mixed row bands, and caps output at 200 copies. It is a conservative bounding-box layout, not irregular-shape nesting. For example, ten 55 × 90 mm gift tags fit on portrait A4 with 5 mm margins and 3 mm gaps when rotated.
 
-Copies share one template, dimensions, background colors, and image artwork. **Edit design** returns to the single-design editing view while retaining the stored sheet arrangement; entering Sheet layout again restores it. Changes to dimensions affect all copies and may require refilling the sheet. Red bounding boxes flag overlap, insufficient gaps, or outside margins. SVG/DXF export and printing are blocked until the arrangement is valid.
+Copies share one template, dimensions, background colors, and image artwork. **Design** returns to the single-design editing view while retaining the stored sheet arrangement; entering Sheet layout again restores it. Changes to dimensions affect all copies and may require refilling the sheet. Red bounding boxes flag overlap, insufficient gaps, or outside margins. SVG/DXF export and printing are blocked until the arrangement is valid.
 
 SVG and Print / Save as PDF include every placed copy at actual size, with a shared embedded master for images/colors. DXF includes transformed cut/crease lines and holes for every copy. JSON, presets, and saved designs retain all copy positions and rotations; older settings migrate to a single design. Sheet orientation, margins, and custom paper sizes continue to apply.
 
 ### Interactive canvas and A4 frame
 
-New templates start on an A4 sheet (210 × 297 mm). The canvas shows the actual selected paper, a dashed margin, optional 10 mm grid, and a live printable-area fit indicator. Paper size and portrait/landscape controls are available directly above the canvas. **Fit design** scales the active geometry down to fit the selected sheet and records one undo step; **Center paper** changes only the viewport. Some starter dielines exceed A4 until resized or fitted.
+New templates start on an A4 sheet (210 × 297 mm). The canvas shows the actual selected paper, a dashed margin, optional 10 mm grid, and a live printable-area fit indicator. Paper size and portrait/landscape controls are available directly above the canvas. Automatic fitting scales the active geometry down when necessary and displays the applied percentage and resulting body size; **Center paper** changes only the viewport. Designs automatically shrink proportionally when they exceed the printable area of fixed paper. This applies to template selection, dimension/shape edits, imported settings, margins and paper changes. Actual dimension fields update to match the exported size; smaller designs are never enlarged. Auto paper instead grows to the design. In sheet layout, rotated copies are sized to fit the paper and positions are clamped inside margins; overlap warnings still require rearranging copies. Extremely small sheets may be unable to accommodate minimum valid geometry and remain blocked from output.
 
 Drag the circular handles to resize the body or individual flaps. The parameter panel updates live. Snap is 1 mm by default; disable Snap for continuous dragging or hold Alt for 0.1 mm. Drag an empty area to pan, scroll to zoom around the pointer, and double-click the background to center. Each completed resize is one undo step; Escape cancels a drag.
 
@@ -76,4 +84,3 @@ The UI requests DM Sans from Google Fonts and falls back to sans-serif without a
 Run `npm test`. Tests cover independent flap sizes, exact bounding boxes, cut-line crossings, large decimal sizes, invalid inputs, hole placement, pillow curves, sheet fit/rotation, snapping, aspect locks, rotated drag coordinates, valid drag boundaries, complete component coverage, image fitting, clipping, transforms, deduplicated backups, and supported image sources. `node tests/create-artwork-fixtures.cjs` creates small synthetic PNGs for upload QA.
 
 Original references: https://www.diecuttemplates.com/ and https://diecutmaker.com/design/portrait-envelope.
-

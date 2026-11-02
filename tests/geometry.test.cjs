@@ -57,3 +57,34 @@ test('valid varied sizes keep all cut and crease coordinates inside bounds',()=>
     if(!G.validate(t,p).length)verifyBounds(G.generate(t,p));
   }
 });
+
+test('each flap shape combination keeps a valid outline, bounds and fold edges',()=>{
+  for(const kind of ['envelope','tray','box','bag']){
+    const t=template(kind),base=G.defaults(t),original=G.generate(t,base),keys=G.shapeFields(kind).map(([key])=>key);
+    for(let mask=0;mask<2**keys.length;mask++){
+      const p={...base};keys.forEach((key,i)=>p[key]=mask&(1<<i)?'rectangle':'trapezoid');
+      const g=G.generate(t,p);verifyBounds(g);assert.deepEqual(g.fold,original.fold);assert.equal(g.bw,original.bw);assert.equal(g.bh,original.bh);
+    }
+  }
+});
+test('rectangle bottom flap reaches both body corners while other envelope flaps remain unchanged',()=>{
+  const t=template('envelope'),p=G.defaults(t),before=G.generate(t,p),after=G.generate(t,{...p,bottomShape:'rectangle'});
+  assert.deepEqual(after.cut[7],[p.left+p.w,after.bh]);assert.deepEqual(after.cut[8],[p.left,after.bh]);
+  after.cut.forEach((point,i)=>{if(![7,8].includes(i))assert.deepEqual(point,before.cut[i]);});
+});
+test('legacy shape settings retain trapezoids and unknown shapes cannot generate exports',()=>{
+  const t=template('envelope'),p=G.defaults(t),legacy={...p};for(const [key]of G.shapeFields(t.kind))delete legacy[key];
+  assert.deepEqual(G.generate(t,legacy),G.generate(t,p));assert.throws(()=>G.generate(t,{...p,bottomShape:'arbitrary'}),/choose Trapezoid or Rectangle/);
+  const rectangles={...p,topShape:'rectangle',bottomShape:'rectangle',leftShape:'rectangle',rightShape:'rectangle',corner:999};assert.equal(G.validate(t,rectangles).length,0);
+});
+
+test('automatic paper fitting scales all starter dielines into A4 without changing paper, artwork or shapes',()=>{
+  for(const t of G.templates){const p={...G.defaults(t),bottomShape:'rectangle'},next=G.fitDesign(t,p),g=G.generate(t,next);assert(G.sheetFit(g,next).fits,t.name);assert.equal(next.paperW,p.paperW);assert.equal(next.paperH,p.paperH);assert.equal(next.margin,p.margin);assert.equal(next.thickness,p.thickness);assert.equal(next.bottomShape,p.bottomShape);assert.deepEqual(next.artwork,p.artwork);}
+});
+test('automatic paper fitting responds to smaller paper and margins and never enlarges a fitting design',()=>{
+  const t=template('envelope'),p={...G.defaults(t),w:300,h:420,paperW:148,paperH:210,margin:10},next=G.fitDesign(t,p);assert(G.sheetFit(G.generate(t,next),next).fits);assert(next.w<p.w);assert(Math.abs(next.w/p.w-next.h/p.h)<1e-6);assert.strictEqual(G.fitDesign(t,next),next);
+  const auto={...p,paper:'auto'};assert.strictEqual(G.fitDesign(t,auto),auto);const invalid={...p,w:NaN};assert.strictEqual(G.fitDesign(t,invalid),invalid);
+});
+test('automatic fitting can constrain a rotated sheet copy while retaining its geometry proportions',()=>{
+  const t=template('tag'),p=G.defaults(t),next=G.fitDesign(t,p,.5);assert.equal(next.w,27.5);assert.equal(next.h,45);assert.equal(next.hole,2.5);
+});
