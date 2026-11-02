@@ -123,7 +123,7 @@ $('#print').onclick=async()=>{
 };
 document.addEventListener('keydown',e=>{const typing=['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName);if(e.key==='/'&&!typing){e.preventDefault();$('#search').focus()}if((e.ctrlKey||e.metaKey)&&!typing&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?$('#redo').click():$('#undo').click()}});
 CanvasStudio.init({
-  paths:artworkDieline,artwork:ArtworkUI,layout:LayoutUI,dimensions:dimensionLines,display,from,unit:()=>unit,mode:()=>mode,invalid:()=>!!errors.length,state:()=>({...p}),onZoom:value=>zoom=value,refresh:renderDrawing,
+  paths:artworkDieline,artwork:ArtworkUI,layout:LayoutUI,dimensions:dimensionLines,display,from,unit:()=>unit,invalid:()=>!!errors.length,state:()=>({...p}),onZoom:value=>zoom=value,refresh:renderDrawing,
   change:state=>{p=state;renderFields();renderDrawing()},
   commit:before=>{const previous=JSON.stringify(before);if(previous!==snapshot()){history.push(previous);history=history.slice(-60);future=[];updateHistory()}},
   edit:(key,value)=>{const next=FoldCanvasModel.change(selected,p,key,value),invalid=G.validate(selected,next);if(invalid.length){toast(invalid[0].message);return}remember();p=next;renderFields();renderDrawing()},
