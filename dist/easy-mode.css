@@ -12,3 +12,12 @@
 .mode-easy #foldGeometry:not([open]),.mode-easy .scale-control,.mode-easy .custom-preset-row{display:none}
 .mode-easy .settings-title h2::after{content:' · Basic';font-size:12px;color:#6b7e9c;font-weight:500}
 @media(max-width:700px){.easy-toolbar{padding:12px;align-items:flex-start;flex-direction:column}.easy-steps{padding:10px 12px}}
+
+/* Workspace uses a fixed-height application shell. Account for both added rows. */
+@media screen {
+  body{grid-template-rows:60px auto auto minmax(0,1fr)!important;min-height:0}
+  .easy-toolbar,.easy-steps{min-width:0;min-height:0}
+  .workspace{min-height:0!important;height:calc(100% - 12px)!important;max-height:calc(100% - 12px)!important;align-self:stretch}
+  .easy-steps[hidden]{display:none}
+  body.mode-advanced{grid-template-rows:60px auto minmax(0,1fr)!important}
+}
