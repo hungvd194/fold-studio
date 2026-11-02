@@ -12,10 +12,15 @@ test('Easy Mode assets and four steps are present',()=>{
   assert.match(html,/src="easy-mode.js"/);
   assert.equal((html.match(/data-easy-step="[1-4]"/g)||[]).length,4);
 });
-test('viewport shell accounts for added navigation rows',()=>{
-  assert.match(css,/grid-template-rows:60px auto auto minmax\(0,1fr\)/);
-  assert.match(css,/body\.mode-advanced\{grid-template-rows:60px auto minmax\(0,1fr\)/);
-  assert.match(css,/\.workspace\{min-height:0!important/);
+test('viewport shell reserves only one compact navigation row',()=>{
+  assert.match(css,/grid-template-rows:60px 38px minmax\\(0,1fr\\)/);
+  assert.match(css,/height:38px/);
+  assert.match(css,/\\.workspace\\{min-height:0!important/);
+});
+test('step navigation does not scroll the full workspace',()=>{
+  assert.doesNotMatch(js,/scrollIntoView/);
+  assert.match(js,/scrollParent\\.scrollTop/);
+  assert.match(js,/getElementById\\('artTool'\\)/);
 });
 test('mode switch does not mutate design state',()=>{
   assert.doesNotMatch(js,/FoldGeometry|G\.fitDesign|p\s*=/);
