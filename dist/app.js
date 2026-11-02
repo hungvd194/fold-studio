@@ -44,8 +44,15 @@ function choose(id,state){selected=templates.find(t=>t.id===id)||templates[0];p=
 function dimensionLines(g,rotated=false){
   const f=g.face,u=CanvasStudio.unitSize(),font=12*u;
   const point=a=>FoldCanvasModel.point(a,g,p,{rotate:rotated});
-  function dimension(start,end,value){const a=point(start),b=point(end),vertical=Math.abs(a[0]-b[0])<1e-5,x=(a[0]+b[0])/2+(vertical?8*u:0),y=(a[1]+b[1])/2-(vertical?0:6*u);return `<path d="M${a.join(' ')}L${b.join(' ')}" fill="none" stroke="#6c7a60" stroke-width="${u}"/><text x="${x}" y="${y}" font-size="${font}" fill="#34462a" stroke="#f8faf5" stroke-width="${4*u}" paint-order="stroke" text-anchor="${vertical?'start':'middle'}" dominant-baseline="${vertical?'middle':'auto'}">${display(value)} ${unit}</text>`;}
-  return `<g data-dimensions font-family="DM Sans,sans-serif" pointer-events="none">${dimension([f.x,f.y-8*u],[f.x+f.w,f.y-8*u],f.w)}${dimension([f.x+f.w+8*u,f.y],[f.x+f.w+8*u,f.y+f.h],f.h)}</g>`;
+  const widthText=`${display(f.w)} ${unit}`,heightText=`${display(f.h)} ${unit}`;
+  function bar(start,end){const a=point(start),b=point(end),vertical=Math.abs(a[0]-b[0])<1e-5,dx=vertical?3*u:0,dy=vertical?0:3*u;return `<path d="M${a.join(' ')}L${b.join(' ')}M${a[0]-dx} ${a[1]-dy}L${a[0]+dx} ${a[1]+dy}M${b[0]-dx} ${b[1]-dy}L${b[0]+dx} ${b[1]+dy}" fill="none" stroke="#6c7a60" stroke-width="${u}"/>`;}
+  const label=(at,text)=>`<text x="${at[0]}" y="${at[1]}" font-size="${font}" fill="#34462a" stroke="#f8faf5" stroke-width="${4*u}" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">${text}</text>`;
+  const center=point([f.x+f.w/2,f.y+f.h/2]),bodyWidth=(rotated?f.h:f.w)/u,bodyHeight=(rotated?f.w:f.h)/u;
+  const compact=bodyWidth<Math.max(widthText.length,heightText.length)*6.5+16||bodyHeight<64;
+  const widthAt=compact?[center[0],center[1]-10*u]:point([f.x+f.w*.5,f.y+f.h*.42]);
+  const heightAt=compact?[center[0],center[1]+10*u]:point([f.x+f.w*.72,f.y+f.h*.76]);
+  if(!compact){widthAt[1]-=8*u;heightAt[1]-=8*u;}
+  return `<g data-dimensions font-family="DM Sans,sans-serif" pointer-events="none">${bar([f.x,f.y+f.h*.42],[f.x+f.w,f.y+f.h*.42])}${bar([f.x+f.w*.72,f.y],[f.x+f.w*.72,f.y+f.h])}${label(widthAt,(compact?'W ':'')+widthText)}${label(heightAt,(compact?'H ':'')+heightText)}</g>`;
 }
 function keepDesignOnPaper(){
   if(G.validate(selected,p).length||p.paper==='auto')return;
