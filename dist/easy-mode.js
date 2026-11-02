@@ -25,7 +25,7 @@
       else button.removeAttribute('aria-current');
     });
   }
-  function setMode(next){mode=next;try{localStorage.setItem(key,mode)}catch{}render()}
+  function setMode(next){mode=next;try{localStorage.setItem(key,mode)}catch{}render();if(next==='easy'&&!['tab-size','tab-background','tab-sheet'].some(id=>document.getElementById(id)?.getAttribute('aria-selected')==='true'))document.getElementById('tab-size')?.click()}
   easy.addEventListener('click',()=>setMode('easy'));
   advanced.addEventListener('click',()=>setMode('advanced'));
   steps.forEach(button=>button.addEventListener('click',()=>{
