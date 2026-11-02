@@ -8,6 +8,8 @@
   const key='fold-editor-mode-v1';
   const targets={1:'.library',2:'#panel-size',3:'#panel-background',4:'.export'};
   const hint=document.getElementById('easyHint');
+  const guide=document.getElementById('easyGuide');
+  const next=document.getElementById('easyNext');
   const hintText={1:'Choose a template on the left. The preview updates automatically.',2:'Enter the finished body size in millimeters. Fold flaps are calculated separately.',3:'Add an image or color if you like. Decoration is optional.',4:'Check the paper size, then print at 100% or download an SVG.'};
   let mode='easy',step=1;
   try{mode=localStorage.getItem(key)==='advanced'?'advanced':'easy'}catch{}
