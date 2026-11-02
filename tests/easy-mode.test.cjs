@@ -48,3 +48,9 @@ test('guided next action and context panel are wired',()=>{
   assert(js.includes("const next=document.getElementById('easyNext')"));
   assert(js.includes("next.addEventListener('click'"));
 });
+
+test('Rotate remains available in Easy Mode via Arrange',()=>{
+  assert(!css.includes('.mode-easy #tab-geometry,.mode-easy #tab-arrange,.mode-easy #tab-more{display:none}'));
+  assert(css.includes('.mode-easy #tab-arrange{display:inline-flex}'));
+  assert(js.includes("'tab-arrange'"));
+});
