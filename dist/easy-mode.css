@@ -21,3 +21,15 @@
   .easy-steps[hidden]{display:none}
   body.mode-advanced{grid-template-rows:60px auto minmax(0,1fr)!important}
 }
+
+/* Compact one-line navigator: reserve only 38px instead of two full bars. */
+@media screen {
+ body,body.mode-advanced{grid-template-rows:60px 38px minmax(0,1fr)!important}
+ .easy-toolbar{height:38px;min-height:0;padding:2px 12px;display:flex;flex-direction:row;gap:12px;overflow:hidden;background:#fff;border-bottom:1px solid #e8e9e2}
+ .easy-toolbar-actions{padding:2px;gap:1px;border-radius:8px;flex:0 0 auto}
+ .easy-toolbar-actions button{padding:4px 10px;border-radius:6px;font-size:11px;line-height:16px}
+ .easy-steps{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow-x:auto;border:0;padding:0;background:transparent}
+ .easy-steps button{padding:5px 10px;font-size:11px;line-height:16px;border-radius:7px}
+ .workspace{min-height:0!important;max-height:calc(100% - 12px)!important}
+}
+@media screen and (max-width:700px){.easy-toolbar{padding:2px 8px;gap:6px}.easy-toolbar-actions button{padding:4px 7px}.easy-steps button{padding:5px 7px}}
