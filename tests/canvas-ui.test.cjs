@@ -47,7 +47,7 @@ test('whole-design drag scales body and flaps proportionally without scaling pap
  assert.equal(next.thickness,p.thickness);
  assert.deepEqual(G.validate(t,next),[]);
 });
-test('Easy Mode uses whole-design scale handle, not flap-only handles',()=>{
+test('Easy Mode uses paper-frame inverse scale handle, not flap-only handles',()=>{
  const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas-ui.js'),'utf8');
  assert(source.includes('const handles=[overall]'));
  assert(source.includes("M.scaleDrag(scene.t,d.start,ratio,snap)"));
