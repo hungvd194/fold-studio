@@ -26,6 +26,13 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
     const flapAfter=await page.locator('[data-param="bottom"]').inputValue();
     assert.notEqual(after,before,'Body width should change by dragging corner');
     assert.notEqual(flapAfter,flapBefore,'Flaps should scale together with body');
+    const component=page.locator('#drawing [data-key="bottom"]');
+    assert.equal(await component.count(),1,'Component handle must remain available after paper resize');
+    const componentPoint=await component.boundingBox();
+    assert(componentPoint,'Component handle should remain visible');
+    await page.mouse.move(componentPoint.x+componentPoint.width/2,componentPoint.y+componentPoint.height/2);
+    await page.mouse.down();await page.mouse.move(componentPoint.x+componentPoint.width/2,componentPoint.y+componentPoint.height/2+15,{steps:6});await page.mouse.up();
+    assert.notEqual(await page.locator('[data-param="bottom"]').inputValue(),flapAfter,'Flap can still be resized independently');
    }
    assert.equal(await page.locator('#easySteps').isVisible(),true);
    assert.equal(await page.locator('[data-easy-step]').count(),4);
