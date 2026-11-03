@@ -10,7 +10,7 @@
   const hint=document.getElementById('easyHint');
   const guide=document.getElementById('easyGuide');
   const next=document.getElementById('easyNext');
-  const hintText={1:'Choose a template on the left. The preview updates automatically.',2:'Enter the finished body size in millimeters. Fold flaps are calculated separately.',3:'Add an image or color if you like. Decoration is optional.',4:'Check the paper size, then print at 100% or download an SVG.'};
+  const hintText={1:'Choose a craft on the left. Watch it appear on your paper.',2:'Drag orange dots to change a flap. Drag the paper corner to scale the whole design.',3:'Add an image or color if you like. Decoration is optional.',4:'Print at 100% actual size, or download your cut lines.'};
   let mode='easy',step=1;
   try{mode=localStorage.getItem(key)==='advanced'?'advanced':'easy'}catch{}
   function render(){
@@ -56,8 +56,7 @@
     if(step===2){
       const sizeTab=document.getElementById('tab-size');
       if(sizeTab)sizeTab.click();
-      const field=target.querySelector('input');
-      if(field)field.focus({preventScroll:true});
+      // Keep attention on the drawing; numeric inputs remain optional in Details.
     }
     if(step===4){
       const exportButton=document.getElementById('download');
