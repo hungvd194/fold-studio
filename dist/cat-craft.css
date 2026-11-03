@@ -43,3 +43,13 @@ body.mode-easy{--ink:#4a4541;--muted:#756f6a;--line:#e9ddd3;--orange:#cf855f;--g
 }
 @media screen and (max-width:1100px){.mode-easy.cat-details-open .workspace{grid-template-columns:180px minmax(0,1fr) 275px}.mode-easy .cat-coach{max-width:calc(100% - 18px);gap:6px}.cat-coach-actions button{padding:6px}}
 @media screen and (max-width:800px){.mode-easy .workspace,.mode-easy.cat-details-open .workspace{grid-template-columns:minmax(0,1fr)}.mode-easy .settings{display:none}.mode-easy.cat-details-open .settings{display:flex}.mode-easy .cat-coach{left:7px;top:7px;right:7px;max-width:none;flex-wrap:wrap}.cat-mascot{width:32px;height:32px}.cat-coach-copy{flex:1}.cat-coach-actions{width:100%;justify-content:flex-end}.mode-easy .canvas{min-height:310px}}
+
+/* Sheet fit recovery belongs to the drawing it affects, not the document footer. */
+@media screen {
+.canvas{position:relative}
+#sheetOverflowPanel:not([hidden]){position:absolute;z-index:5;right:12px;bottom:54px;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100% - 24px));padding:10px 12px;border:1px solid #e9bf91;border-radius:13px;background:#fff8ec;box-shadow:0 5px 18px #6d4e2418;color:#775333}
+#sheetOverflowPanel[hidden]{display:none!important}
+#sheetOverflowPanel p{margin:0;font-size:11px;line-height:1.45;flex:1;min-width:0}
+#sheetOverflowPanel #useAutoPaper{flex:none;max-width:180px;white-space:normal;text-align:center;background:#c98156;color:#fff;border:0;border-radius:9px;padding:9px 11px;font-size:11px;font-weight:700;line-height:1.25}
+}
+@media screen and (max-width:700px){#sheetOverflowPanel:not([hidden]){left:8px;right:8px;bottom:46px;max-width:none;flex-wrap:wrap}#sheetOverflowPanel #useAutoPaper{max-width:none}}
