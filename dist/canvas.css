@@ -15,3 +15,5 @@
 .resize-handle .handle-value rect{fill:#354e37;stroke:none}
 .resize-handle .handle-value text{fill:#fff;stroke:none;font-family:DM Sans,sans-serif;font-weight:600}
 @media(pointer:coarse){.resize-handle .handle-halo{stroke-width:2px}}
+
+.resize-handle.scale-all-handle{cursor:nwse-resize}.resize-handle.scale-all-handle .handle-halo{fill:#e4f0db;stroke:#426a39;stroke-width:2px}.resize-handle.scale-all-handle .handle-dot{fill:#426a39}.resize-handle.scale-all-handle:hover .handle-halo{fill:#cfe6c5}
