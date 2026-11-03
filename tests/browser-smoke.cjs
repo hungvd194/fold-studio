@@ -42,7 +42,8 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
    assert.equal(await page.locator('#tab-background').getAttribute('aria-selected'),'true');
    await page.locator('[data-easy-step="4"]').click();
    assert.equal(await page.locator('#tab-sheet').getAttribute('aria-selected'),'true');
-   await page.locator('#catDetails').click();
+   if(viewport.width>800) await page.locator('#catDetails').click();
+   else await page.locator('#advancedMode').click();
    await page.locator('#tab-arrange').click();
    assert.equal(await page.locator('#tab-arrange').getAttribute('aria-selected'),'true');
    assert.equal(await page.locator('#layoutRotate').isVisible(),true);
