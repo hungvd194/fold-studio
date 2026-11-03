@@ -31,8 +31,8 @@ test('wheel zoom works without the removed 3D mode and preserves the pointer anc
 });
 
 test('resize handles expose a large pointer target and selected dimension',()=>{
- const canvas=fs.readFileSync(path.join(__dirname,'../dist/canvas-ui.js'),'utf8');
- const css=fs.readFileSync(path.join(__dirname,'../dist/canvas.css'),'utf8');
+ const canvas=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas-ui.js'),'utf8');
+ const css=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas.css'),'utf8');
  assert(canvas.includes('class="handle-hit"'));
  assert(canvas.includes('class="handle-value"'));
  assert(css.includes('.resize-handle{cursor:grab;touch-action:none}'));
