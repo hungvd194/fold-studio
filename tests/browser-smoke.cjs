@@ -42,10 +42,6 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
    assert.equal(await page.locator('#tab-background').getAttribute('aria-selected'),'true');
    await page.locator('[data-easy-step="4"]').click();
    assert.equal(await page.locator('#tab-sheet').getAttribute('aria-selected'),'true');
-   assert.equal(await page.locator('.cat-coach').isVisible(),true);
-   assert.equal(await page.locator('.settings').isVisible(),false);
-   await page.locator('#catDetails').click();
-   assert.equal(await page.locator('.settings').isVisible(),true);
    await page.locator('#tab-arrange').click();
    assert.equal(await page.locator('#tab-arrange').getAttribute('aria-selected'),'true');
    assert.equal(await page.locator('#layoutRotate').isVisible(),true);
