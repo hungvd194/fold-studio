@@ -47,8 +47,18 @@ test('whole-design drag scales body and flaps proportionally without scaling pap
  assert.equal(next.thickness,p.thickness);
  assert.deepEqual(G.validate(t,next),[]);
 });
-test('Easy Mode uses paper-frame inverse scale handle, not flap-only handles',()=>{
+test('paper-frame inverse scaling coexists with individual component handles',()=>{
  const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas-ui.js'),'utf8');
- assert(source.includes('const handles=[overall]'));
+ assert(source.includes('const handles=[...M.handles(t,p,g),overall]'));
  assert(source.includes("M.scaleDrag(scene.t,d.start,1/ratio,snap)"));
+});
+
+test('component resizing remains available after inverse paper-frame scaling',()=>{
+ const t=G.templates.find(t=>t.kind==='envelope'),start=G.defaults(t);
+ const scaled=M.scaleDrag(t,start,.8,0);
+ const changed=M.drag(t,scaled,'bottom',10,0);
+ assert.equal(changed.w,scaled.w);
+ assert.equal(changed.h,scaled.h);
+ assert.equal(changed.bottom,scaled.bottom+10);
+ assert.deepEqual(G.validate(t,changed),[]);
 });
