@@ -16,12 +16,12 @@ async function ready(){for(let i=0;i<60;i++){try{const r=await fetch('http://127
    if(viewport.width>800){
     const before=await page.locator('[data-param="w"]').inputValue();
     const flapBefore=await page.locator('[data-param="bottom"]').inputValue();
-    const handle=page.locator('#drawing [data-key="scale-all"]');
-    assert.equal(await handle.count(),1,'One whole-design resize handle');
+    const handle=page.locator('#drawing [data-key="scale-paper"]');
+    assert.equal(await handle.count(),1,'One paper-frame resize handle');
     const point=await handle.boundingBox();
-    assert(point,'Whole-design handle must be visible');
+    assert(point,'Paper-frame handle must be visible');
     await page.mouse.move(point.x+point.width/2,point.y+point.height/2);
-    await page.mouse.down();await page.mouse.move(point.x+point.width/2+35,point.y+point.height/2+35,{steps:8});await page.mouse.up();
+    await page.mouse.down();await page.mouse.move(point.x+point.width/2-35,point.y+point.height/2-35,{steps:8});await page.mouse.up();
     const after=await page.locator('[data-param="w"]').inputValue();
     const flapAfter=await page.locator('[data-param="bottom"]').inputValue();
     assert.notEqual(after,before,'Body width should change by dragging corner');
