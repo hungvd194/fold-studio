@@ -54,3 +54,11 @@ test('Rotate remains available in Easy Mode via Arrange',()=>{
   assert(css.includes('.mode-easy #tab-arrange{display:inline-flex}'));
   assert(js.includes("'tab-arrange'"));
 });
+
+test('Fold preview entry and assets are fully removed',()=>{
+  assert(!html.includes('foldGuideLaunch'));
+  assert(!html.includes('visual-guide.js'));
+  assert(!html.includes('visual-guide.css'));
+  assert(!fs.existsSync(path.join(dist,'visual-guide.js')));
+  assert(!fs.existsSync(path.join(dist,'visual-guide.css')));
+});
