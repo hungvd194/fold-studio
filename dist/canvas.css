@@ -4,3 +4,16 @@
 @media(max-width:580px){.canvas{height:440px}.canvas-tools{padding:10px}.paper-tools{flex-wrap:wrap}.paper-tools select{font-size:11px;max-width:130px}.paper-tools button{font-size:10px}.canvas-options{font-size:10px;gap:9px}.canvas-options #canvasFitStatus{flex-basis:100%;margin-left:0}.canvas-gesture-hint{max-width:220px;margin:auto}.canvas-note{display:none}#directEditor{top:10px;right:10px;width:142px}.scale-note{max-width:150px}}
 .canvas:has(#drawing[style*="display: none"]) #directEditor{display:none}
 @media print{.canvas-tools,#directEditor,.canvas-gesture-hint,.canvas-note,.canvas-bottom{display:none!important}.canvas #drawing{padding:0!important;cursor:default}}
+
+/* Direct manipulation: large touch targets and readable selected dimensions. */
+.resize-handle{cursor:grab;touch-action:none}
+.resize-handle[data-key="w"],.resize-handle[data-key="left"],.resize-handle[data-key="right"]{cursor:ew-resize}
+.resize-handle[data-key="h"],.resize-handle[data-key="top"],.resize-handle[data-key="bottom"]{cursor:ns-resize}
+.resize-handle .handle-halo{fill:#fff;stroke:#c56a42;transition:fill .12s,stroke .12s}
+.resize-handle .handle-dot{fill:#c56a42;stroke:#fff}
+.resize-handle:hover .handle-halo,.resize-handle:focus .handle-halo,.resize-handle.is-selected .handle-halo{fill:#fff0e7;stroke:#a94e28}
+.resize-handle .handle-value rect{fill:#354e37;stroke:none}
+.resize-handle .handle-value text{fill:#fff;stroke:none;font-family:DM Sans,sans-serif;font-weight:600}
+@media(pointer:coarse){.resize-handle .handle-halo{stroke-width:2px}}
+
+.resize-handle.scale-all-handle{cursor:nwse-resize}.resize-handle.scale-all-handle .handle-halo{fill:#e4f0db;stroke:#426a39;stroke-width:2px}.resize-handle.scale-all-handle .handle-dot{fill:#426a39}.resize-handle.scale-all-handle:hover .handle-halo{fill:#cfe6c5}

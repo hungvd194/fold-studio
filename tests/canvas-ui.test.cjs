@@ -29,3 +29,26 @@ test('wheel zoom works without the removed 3D mode and preserves the pointer anc
     h.wheel(-100000);assert.equal(h.canvas.getZoom(),6);
   }
 });
+
+test('resize handles expose a large pointer target and selected dimension',()=>{
+ const canvas=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas-ui.js'),'utf8');
+ const css=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas.css'),'utf8');
+ assert(canvas.includes('class="handle-hit"'));
+ assert(canvas.includes('class="handle-value"'));
+ assert(css.includes('.resize-handle{cursor:grab;touch-action:none}'));
+});
+
+test('whole-design drag scales body and flaps proportionally without scaling paper',()=>{
+ const t=G.templates.find(t=>t.kind==='envelope'),p=G.defaults(t);
+ const next=M.scaleDrag(t,p,1.2,0);
+ for(const key of ['w','h','top','bottom','left','right','corner'])assert(Math.abs(next[key]-p[key]*1.2)<.0001,key);
+ assert.equal(next.paperW,p.paperW);
+ assert.equal(next.paperH,p.paperH);
+ assert.equal(next.thickness,p.thickness);
+ assert.deepEqual(G.validate(t,next),[]);
+});
+test('Easy Mode uses paper-frame inverse scale handle, not flap-only handles',()=>{
+ const source=fs.readFileSync(require('node:path').join(__dirname,'../dist/canvas-ui.js'),'utf8');
+ assert(source.includes('const handles=[overall]'));
+ assert(source.includes("M.scaleDrag(scene.t,d.start,1/ratio,snap)"));
+});
